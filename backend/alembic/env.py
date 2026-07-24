@@ -5,8 +5,8 @@ from app.core.config import get_settings
 from app.core.db import engine
 from app.models.base import Base
 
-# Import model modules here so their tables register on Base.metadata for
-# autogenerate. (None yet — added as models land in later phases.)
+# Import model modules here so their tables register on Base.metadata for autogenerate.
+from app.models.dataset import Dataset  # noqa: F401
 
 config = context.config
 
