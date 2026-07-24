@@ -1,0 +1,13 @@
+data/
+artifacts/
+*.db
+*.pkl
+*.joblib
+.env
+__pycache__/
+.venv/
+node_modules/
+.next/
+.pytest_cache/
+.mypy_cache/
+.DS_Store
