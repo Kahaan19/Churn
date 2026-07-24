@@ -27,6 +27,16 @@ class DatasetInvalid(CRIPError):
     code = "dataset_invalid"
 
 
+class DatasetTooLarge(CRIPError):
+    status_code = 413
+    code = "dataset_too_large"
+
+
+class DatasetNotFound(CRIPError):
+    status_code = 404
+    code = "dataset_not_found"
+
+
 class ProfileMismatch(CRIPError):
     status_code = 422
     code = "profile_mismatch"

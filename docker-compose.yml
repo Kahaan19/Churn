@@ -4,8 +4,13 @@ services:
     environment:
       CRIP_DATABASE_URL: sqlite:////data/crip.db
       CRIP_CORS_ORIGINS: http://localhost:3000
+      CRIP_UPLOAD_DIR: /data/uploads
+      CRIP_SAMPLE_DATASET_PATH: /sample-data/telco.csv
     volumes:
       - backend-data:/data
+      # Host data/ is gitignored and not in the build context; bind-mount it
+      # read-only so "load sample dataset" can find the bundled reference CSV.
+      - ./data:/sample-data:ro
     ports:
       - "8000:8000"
 
