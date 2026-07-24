@@ -51,7 +51,8 @@ timestamps `TIMESTAMP` UTC. JSON payloads use the `JSON` column type.
 
 ```
 dataset            id, name, filename, storage_path, n_rows, n_cols, column_profile(JSON),
-                   quality_report(JSON), created_at
+                   quality_report(JSON), eda_payload(JSON, nullable — cached on first
+                   GET /datasets/{id}/eda), created_at
 
 run                id, dataset_id→dataset, status(queued|running|succeeded|failed),
                    config(JSON), best_model_id, chosen_threshold, risk_tier_bounds(JSON),
@@ -86,6 +87,7 @@ All errors return `{"detail": {"code": "...", "message": "...", "fields": {...}}
 ### Datasets
 ```
 POST   /datasets                     multipart csv → Dataset          (413 >50MB, 422 bad csv)
+POST   /datasets/sample              → Dataset                        (loads the bundled reference CSV)
 GET    /datasets                     → paginated
 GET    /datasets/{id}                → Dataset (incl. column_profile)
 PATCH  /datasets/{id}/profile        ColumnProfileUpdate → Dataset

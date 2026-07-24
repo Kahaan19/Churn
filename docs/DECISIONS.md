@@ -65,3 +65,10 @@ regeneration is deferred (out of Phase 0 scope).
 **2026-07-24 (Phase 0) — Pre-commit runs only ruff + eslint.** The full five-gate suite (mypy, pytest,
 typecheck, vitest, build) runs before a phase is declared done, not on every commit. Keeping the hook
 fast is a deliberate speed trade-off.
+
+**2026-07-24 (Phase 1) — Two small `DATA_CONTRACT.md` additions.** `dataset.eda_payload(JSON,
+nullable)` was added because the build plan requires EDA to be "cached to the dataset row on first
+request," and the original table listing had no column for it. `POST /datasets/sample → Dataset` was
+added because the build plan requires a "load sample dataset" button with no documented endpoint
+behind it; it runs the bundled `data/telco.csv` through the same ingestion pipeline as a real upload.
+Both were gaps in the original contract rather than deviations from it.
