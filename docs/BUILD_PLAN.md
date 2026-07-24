@@ -10,7 +10,7 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done. Update this
 
 ---
 
-## `[ ]` Phase 0 — Foundation
+## `[x]` Phase 0 — Foundation
 
 **Reads:** `CONVENTIONS.md`
 **Goal:** both apps boot, talk to each other, and every quality gate runs green on an empty project.
