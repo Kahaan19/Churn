@@ -1,0 +1,23 @@
+# Fast gate on commit: ruff (backend) + eslint (frontend). The full quality
+# gates (mypy, pytest, typecheck, vitest, build) run before a phase is declared
+# done, not on every commit. Install with: pre-commit install
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.13
+    hooks:
+      - id: ruff
+        name: ruff (backend)
+        args: [--fix]
+        files: ^backend/.*\.py$
+      - id: ruff-format
+        name: ruff-format (backend)
+        files: ^backend/.*\.py$
+
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint (frontend)
+        entry: pnpm --dir frontend exec eslint src
+        language: system
+        files: ^frontend/src/.*\.(ts|tsx)$
+        pass_filenames: false

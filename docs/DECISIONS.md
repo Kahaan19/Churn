@@ -44,3 +44,24 @@ project is described as a prototype until auth, drift monitoring, and a retraini
 
 **2026-07-24 — Force plots dropped.** They are hard to read and carry no information the waterfall
 plot lacks, and the stated audience is business users without ML background.
+
+**2026-07-24 (Phase 0) — Error envelope shape.** The spec mandates a uniform error envelope but does
+not define its fields. Chosen shape: `{"error": {"code, message, request_id, details?}}`, where
+`code` is a stable machine string per domain exception, `request_id` echoes `X-Request-ID`, and
+`details` carries field-level validation errors. Domain exceptions in `core/exceptions.py` each map
+to one status via a handler; `RequestValidationError` and unhandled `Exception` map to 422/500.
+
+**2026-07-24 (Phase 0) — Pinned Next.js 15, not the current 16.** `create-next-app@latest` now
+scaffolds Next 16. The stack in `CLAUDE.md` specifies Next 15, so the toolchain was pinned to 15.5.x
+(and `eslint-config-next` likewise) to honour the spec and keep the lockfile reproducible. Revisit as
+a deliberate upgrade, not a drift. Consequence: the generated flat ESLint config was replaced with a
+`FlatCompat` bridge, since 15.x still ships legacy `eslintrc`-style shared configs.
+
+**2026-07-24 (Phase 0) — Generated API client is committed.** `src/lib/api/generated.ts` is produced
+by `pnpm gen:api` from a running backend. It is committed (not gitignored) so a fresh clone type-checks
+and builds without first starting the API. Regenerate it whenever the OpenAPI schema changes. CI-side
+regeneration is deferred (out of Phase 0 scope).
+
+**2026-07-24 (Phase 0) — Pre-commit runs only ruff + eslint.** The full five-gate suite (mypy, pytest,
+typecheck, vitest, build) runs before a phase is declared done, not on every commit. Keeping the hook
+fast is a deliberate speed trade-off.
