@@ -18,5 +18,6 @@ RUN uv sync --frozen --no-dev
 
 EXPOSE 8000
 
-# Apply migrations, then serve.
-CMD ["sh", "-c", "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+# --no-sync: the image already has the exact locked env; skip uv re-resolving
+# (and pulling dev-only tools like ruff/mypy) on every container start.
+CMD ["sh", "-c", "uv run --no-sync alembic upgrade head && uv run --no-sync uvicorn app.main:app --host 0.0.0.0 --port 8000"]

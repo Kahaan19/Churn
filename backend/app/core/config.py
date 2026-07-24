@@ -1,7 +1,9 @@
+import json
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -16,13 +18,17 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
     database_url: str = "sqlite:///./crip.db"
     log_level: str = "INFO"
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # NoDecode: skip pydantic-settings' default JSON-decode of env vars for
+    # list fields, since CRIP_CORS_ORIGINS arrives as a comma-separated string,
+    # not a JSON array.
+    cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
 
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, value: object) -> object:
-        # Env vars arrive as comma-separated strings; JSON lists also work.
-        if isinstance(value, str) and not value.strip().startswith("["):
+        if isinstance(value, str):
+            if value.strip().startswith("["):
+                return json.loads(value)
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 
