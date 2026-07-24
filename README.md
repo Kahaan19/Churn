@@ -13,7 +13,7 @@ quantify revenue at risk → recommend retention actions.
 ## Prerequisites
 
 - Python 3.12 and [`uv`](https://docs.astral.sh/uv/)
-- Node 20+ and [`pnpm`](https://pnpm.io/)
+- Node 22+ and [`pnpm`](https://pnpm.io/)
 - Docker (optional, for `docker compose`)
 
 ## Quick start
