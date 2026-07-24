@@ -1,13 +1,33 @@
+# Data & model artifacts (never committed)
 data/
 artifacts/
 *.db
 *.pkl
 *.joblib
+
+# Environment
 .env
+.env.*
+!.env.example
+
+# Python
 __pycache__/
 .venv/
-node_modules/
-.next/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+frontend/src/lib/api/generated.ts
+
+# OS / editor
 .DS_Store
+.idea/
+.vscode/
