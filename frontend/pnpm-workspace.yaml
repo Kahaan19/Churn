@@ -3,3 +3,11 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   '@tailwindcss/oxide': true
+  es5-ext: true
+
+overrides:
+  # react-plotly.js peer-depends on the full plotly.js, which drags in a
+  # native-build toolchain (gl-text, regl-line2d, es5-ext...) just to satisfy
+  # the peer. We only ever import the pre-built dist-min bundle, so alias the
+  # peer to it and skip installing the full package entirely.
+  plotly.js: npm:plotly.js-dist-min@^3.7.0

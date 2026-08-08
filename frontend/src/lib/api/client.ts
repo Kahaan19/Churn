@@ -3,7 +3,7 @@ import type { paths } from "@/lib/api/generated";
 export type HealthResponse =
   paths["/health"]["get"]["responses"][200]["content"]["application/json"];
 
-const API_BASE_URL =
+export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 export class ApiError extends Error {
