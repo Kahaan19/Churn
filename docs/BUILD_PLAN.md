@@ -32,7 +32,7 @@ gate commands pass; `git log` has one clean commit.
 
 ---
 
-## `[ ]` Phase 1 — Ingestion, validation, EDA
+## `[x]` Phase 1 — Ingestion, validation, EDA
 
 **Reads:** `DATA_CONTRACT.md` (dataset schema, quality/EDA sections)
 **Goal:** upload a CSV and get back a trustworthy picture of it.
