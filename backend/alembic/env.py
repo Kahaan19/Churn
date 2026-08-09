@@ -7,6 +7,9 @@ from app.models.base import Base
 
 # Import model modules here so their tables register on Base.metadata for autogenerate.
 from app.models.dataset import Dataset  # noqa: F401
+from app.models.job import Job  # noqa: F401
+from app.models.model_artifact import ModelArtifact  # noqa: F401
+from app.models.run import Run  # noqa: F401
 
 config = context.config
 
