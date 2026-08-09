@@ -65,6 +65,7 @@ def _run_training_job(session: Session, job: Job) -> None:
                 algorithm=model_result.algorithm,
                 params=model_result.params,
                 artifact_path=model_result.artifact_path,
+                explainer_path=model_result.explainer_path,
                 feature_group_map=model_result.feature_group_map,
                 metrics={
                     "validation": model_result.validation_metrics,
@@ -78,6 +79,7 @@ def _run_training_job(session: Session, job: Job) -> None:
     run.best_model_id = winner_artifact_id
     run.chosen_threshold = result.chosen_threshold
     run.risk_tier_bounds = cast(dict[str, object], result.risk_tier_bounds)
+    run.global_importance = result.global_importance.model_dump()
     run.calibration_curve = {"points": result.calibration_curve}
     run.finished_at = datetime.now(UTC)
     session.add(run)

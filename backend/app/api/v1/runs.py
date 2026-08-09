@@ -5,9 +5,11 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from app.core.db import get_session
+from app.schemas.explain import ExplainRequest, Explanation, GlobalImportance
 from app.schemas.pagination import Page
 from app.schemas.run import CalibrationCurve, RunCreate
 from app.schemas.run import Run as RunSchema
+from app.services import explain as explain_service
 from app.services import runs as runs_service
 
 router = APIRouter(prefix="/runs", tags=["runs"])
@@ -39,3 +41,13 @@ def get_run(session: SessionDep, run_id: str) -> runs_service.RunModel:
 @router.get("/{run_id}/calibration", response_model=CalibrationCurve)
 def get_calibration(session: SessionDep, run_id: str) -> dict[str, object]:
     return runs_service.get_calibration(session, run_id)
+
+
+@router.get("/{run_id}/importance", response_model=GlobalImportance)
+def get_importance(session: SessionDep, run_id: str) -> GlobalImportance:
+    return explain_service.get_global_importance(session, run_id)
+
+
+@router.post("/{run_id}/explain", response_model=Explanation)
+def explain_customer(session: SessionDep, run_id: str, payload: ExplainRequest) -> Explanation:
+    return explain_service.explain_customer(session, run_id, payload.features)

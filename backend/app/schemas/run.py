@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from app.schemas.explain import GlobalImportance
+
 ALGORITHMS: tuple[str, ...] = ("logistic_regression", "random_forest", "xgboost", "lightgbm")
 
 
@@ -63,7 +65,7 @@ class Run(BaseModel):
     best_model_id: str | None
     chosen_threshold: float | None
     risk_tier_bounds: dict[str, list[float]] | None
-    global_importance: dict[str, float] | None
+    global_importance: GlobalImportance | None
     error_message: str | None
     started_at: datetime | None
     finished_at: datetime | None
