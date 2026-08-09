@@ -14,6 +14,11 @@ dependencies = [
     "numpy>=2.5.1",
     "scipy>=1.18.0",
     "python-multipart>=0.0.32",
+    "scikit-learn>=1.6.0",
+    "xgboost>=2.1.0",
+    "lightgbm>=4.5.0",
+    "category-encoders>=2.6.0",
+    "joblib>=1.4.0",
 ]
 
 [dependency-groups]
@@ -41,13 +46,19 @@ select = ["E", "F", "I", "UP", "B", "SIM", "C4", "RUF"]
 known-first-party = ["app"]
 
 [tool.ruff.lint.per-file-ignores]
-# Generated migrations import op/sa unconditionally; empty ones leave them unused.
-"alembic/versions/*" = ["F401"]
+# Generated migrations import op/sa unconditionally (empty ones leave them unused) and are not
+# hand-wrapped to the line-length limit.
+"alembic/versions/*" = ["F401", "E501"]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# None of these ship inline type hints or a complete stub package.
+module = ["sklearn.*", "xgboost.*", "lightgbm.*", "category_encoders.*", "joblib.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 addopts = "-q"
