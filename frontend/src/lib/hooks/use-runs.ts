@@ -1,0 +1,43 @@
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { createRun, fetchCalibration, fetchRun, fetchRuns, type RunCreate } from "@/lib/api/runs";
+import { queryKeys } from "@/lib/query-keys";
+
+const ACTIVE_STATUSES = new Set(["queued", "running"]);
+const POLL_INTERVAL_MS = 2000;
+
+export function useRunsQuery(limit = 50, offset = 0) {
+  return useQuery({
+    queryKey: queryKeys.runs(limit, offset),
+    queryFn: ({ signal }) => fetchRuns({ limit, offset }, signal),
+  });
+}
+
+export function useRunQuery(id: string) {
+  return useQuery({
+    queryKey: queryKeys.run(id),
+    queryFn: ({ signal }) => fetchRun(id, signal),
+    refetchInterval: (query) =>
+      query.state.data && ACTIVE_STATUSES.has(query.state.data.status) ? POLL_INTERVAL_MS : false,
+  });
+}
+
+export function useCalibrationQuery(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.runCalibration(id),
+    queryFn: ({ signal }) => fetchCalibration(id, signal),
+    enabled,
+  });
+}
+
+export function useCreateRun() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: RunCreate) => createRun(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["runs"] });
+    },
+  });
+}
