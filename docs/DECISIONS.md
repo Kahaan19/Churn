@@ -72,3 +72,30 @@ request," and the original table listing had no column for it. `POST /datasets/s
 added because the build plan requires a "load sample dataset" button with no documented endpoint
 behind it; it runs the bundled `data/telco.csv` through the same ingestion pipeline as a real upload.
 Both were gaps in the original contract rather than deviations from it.
+
+**2026-08-08 (Phase 2) — Provisional financial constants for the EV-optimal threshold.**
+`ARCHITECTURE.md`'s decision-threshold formula needs `save_rate`, `retention_cost`, and `clv`, but
+`ml/finance.py` and `config/financial.yaml` (Phase 4) don't exist yet. Rather than build Phase 4
+early, `ml/train.py` uses private module-level constants that mirror the exact defaults
+`ARCHITECTURE.md` already shows for `financial.yaml` (`gross_margin=0.65`,
+`discount_rate_monthly=0.01`, `expected_tenure_months=24`, `save_rate=0.30`,
+`retention_cost=15` flat — the "medium" tier, since the EV(t) formula itself is a single tier-agnostic
+scalar and tier bounds aren't computed until after the threshold search). `clv` is computed per
+validation row from that row's `revenue_column` using the same annuity formula Phase 4 will use. This
+is a real threshold search, not a stub. Phase 4 must replace these constants with `FinancialAssumptions`
+loaded from config, without changing the search logic itself.
+
+**2026-08-08 (Phase 2) — `CalibratedClassifierCV(cv="prefit")` replaced with `FrozenEstimator`.**
+The spec (`ARCHITECTURE.md`) names `cv="prefit"`, but scikit-learn removed that option as of the
+1.9.0 resolved by this project's lockfile (deprecated since 1.6). The replacement —
+`CalibratedClassifierCV(FrozenEstimator(fitted_pipeline), method="isotonic")` — is scikit-learn's
+own documented migration path and produces the identical behavior the spec calls for: the wrapped
+estimator is never refit, and only the isotonic calibrator is fit on `val_df`. No change to intent,
+only to a since-removed scikit-learn API.
+
+**2026-08-08 (Phase 2) — `libomp` required for xgboost/lightgbm on macOS arm64.** Both failed to
+import (`libomp.dylib` not loaded) until `brew install libomp` was run. Current PyPI wheels for these
+two packages do not bundle OpenMP on macOS the way some other platforms' wheels do. Documented here
+since it's a one-time host setup step, not a project config change — a fresh clone on Apple Silicon
+will need the same `brew install libomp` before `uv run pytest` (or the app) can import either
+library.

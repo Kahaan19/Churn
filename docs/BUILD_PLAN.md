@@ -54,7 +54,7 @@ and EDA renders without the browser receiving a single raw data row.
 
 ---
 
-## `[ ]` Phase 2 — Training pipeline
+## `[x]` Phase 2 — Training pipeline
 
 **Reads:** `ARCHITECTURE.md` (ML pipeline), `DATA_CONTRACT.md` (run/model tables)
 **Goal:** a run trains four models and picks a winner, reproducibly.
