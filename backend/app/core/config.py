@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     # docker-compose, where data/ is bind-mounted at a different container path.
     sample_dataset_path: str = str(_REPO_ROOT / "data" / "telco.csv")
 
+    artifacts_dir: str = str(_REPO_ROOT / "artifacts")
+    # Disabled in tests so API tests drive the job queue synchronously via
+    # jobs.runner.process_pending instead of racing a real background thread.
+    job_runner_enabled: bool = True
+    job_runner_poll_seconds: float = 1.0
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, value: object) -> object:
