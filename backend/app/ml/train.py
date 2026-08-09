@@ -26,8 +26,10 @@ from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold, train_t
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 
+from app.ml.explain import GLOBAL_IMPORTANCE_SAMPLE, build_explainer, compute_global_importance
 from app.ml.pipeline import build_feature_group_map, build_preprocessor, split_categorical_low
 from app.schemas.dataset import ColumnProfile
+from app.schemas.explain import GlobalImportance
 from app.schemas.run import ALGORITHMS
 
 RANDOM_STATE = 42
@@ -75,6 +77,7 @@ class ModelResult:
     test_metrics: dict[str, object] | None = None
     is_best: bool = False
     artifact_path: str = ""
+    explainer_path: str | None = None
 
 
 @dataclass
@@ -83,6 +86,7 @@ class TrainResult:
     best_algorithm: str
     chosen_threshold: float
     risk_tier_bounds: dict[str, list[float]]
+    global_importance: GlobalImportance
     calibration_curve: list[dict[str, float]] = field(default_factory=list)
 
 
@@ -330,6 +334,20 @@ def train_run(
     winner = max(results, key=lambda r: r.validation_metrics["pr_auc"])  # type: ignore[arg-type,return-value]
     winner.is_best = True
 
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+
+    # Built from the uncalibrated pipeline, before the calibrated wrapper replaces it below: SHAP
+    # decomposes the base model's raw output, and calibration is a monotone map applied after the
+    # fact. The background is the train fold only. See docs/DECISIONS.md.
+    explainer = build_explainer(winner.pipeline, winner.feature_group_map, train_df)
+    importance_sample = val_df.sample(
+        n=min(GLOBAL_IMPORTANCE_SAMPLE, len(val_df)), random_state=RANDOM_STATE
+    )
+    global_importance = compute_global_importance(explainer, importance_sample)
+    explainer_path = artifacts_dir / f"{winner.algorithm}.explainer.joblib"
+    joblib.dump(explainer, explainer_path)
+    winner.explainer_path = str(explainer_path)
+
     # FrozenEstimator marks the already-fitted pipeline as not-to-be-refit, so the wrapper only
     # fits the isotonic calibration mapping on `val_df` (the cv="prefit" replacement since
     # scikit-learn 1.6).
@@ -342,7 +360,6 @@ def train_run(
     # wrapper as the winner's artifact rather than the raw pipeline.
     winner.pipeline = calibrated
 
-    artifacts_dir.mkdir(parents=True, exist_ok=True)
     for result in results:
         path = artifacts_dir / f"{result.algorithm}.joblib"
         joblib.dump(result.pipeline, path)
@@ -356,5 +373,6 @@ def train_run(
         best_algorithm=winner.algorithm,
         chosen_threshold=chosen_threshold,
         risk_tier_bounds=_risk_tier_bounds(calibrated_val_proba),
+        global_importance=global_importance,
         calibration_curve=_calibration_curve_points(y_val, calibrated_val_proba),
     )
