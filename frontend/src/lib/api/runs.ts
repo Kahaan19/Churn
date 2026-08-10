@@ -9,6 +9,11 @@ export type RunCreate =
   paths["/api/v1/runs"]["post"]["requestBody"]["content"]["application/json"];
 export type CalibrationCurve =
   paths["/api/v1/runs/{run_id}/calibration"]["get"]["responses"][200]["content"]["application/json"];
+export type GlobalImportance =
+  paths["/api/v1/runs/{run_id}/importance"]["get"]["responses"][200]["content"]["application/json"];
+export type Explanation =
+  paths["/api/v1/runs/{run_id}/explain"]["post"]["responses"][200]["content"]["application/json"];
+export type FeatureContribution = Explanation["shap_values"][number];
 
 async function parseOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
@@ -36,6 +41,26 @@ export async function fetchCalibration(
   signal?: AbortSignal,
 ): Promise<CalibrationCurve> {
   const response = await fetch(`${API_BASE_URL}/api/v1/runs/${id}/calibration`, { signal });
+  return parseOrThrow(response);
+}
+
+export async function fetchImportance(
+  id: string,
+  signal?: AbortSignal,
+): Promise<GlobalImportance> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/runs/${id}/importance`, { signal });
+  return parseOrThrow(response);
+}
+
+export async function explainCustomer(
+  id: string,
+  features: Record<string, string | number>,
+): Promise<Explanation> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/runs/${id}/explain`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ features }),
+  });
   return parseOrThrow(response);
 }
 

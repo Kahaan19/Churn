@@ -7,4 +7,5 @@ export const queryKeys = {
   runs: (limit: number, offset: number) => ["runs", limit, offset] as const,
   run: (id: string) => ["run", id] as const,
   runCalibration: (id: string) => ["run", id, "calibration"] as const,
+  runImportance: (id: string) => ["run", id, "importance"] as const,
 };

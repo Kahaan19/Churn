@@ -2,7 +2,15 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createRun, fetchCalibration, fetchRun, fetchRuns, type RunCreate } from "@/lib/api/runs";
+import {
+  createRun,
+  explainCustomer,
+  fetchCalibration,
+  fetchImportance,
+  fetchRun,
+  fetchRuns,
+  type RunCreate,
+} from "@/lib/api/runs";
 import { queryKeys } from "@/lib/query-keys";
 
 const ACTIVE_STATUSES = new Set(["queued", "running"]);
@@ -29,6 +37,20 @@ export function useCalibrationQuery(id: string, enabled: boolean) {
     queryKey: queryKeys.runCalibration(id),
     queryFn: ({ signal }) => fetchCalibration(id, signal),
     enabled,
+  });
+}
+
+export function useImportanceQuery(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.runImportance(id),
+    queryFn: ({ signal }) => fetchImportance(id, signal),
+    enabled,
+  });
+}
+
+export function useExplainCustomer(id: string) {
+  return useMutation({
+    mutationFn: (features: Record<string, string | number>) => explainCustomer(id, features),
   });
 }
 

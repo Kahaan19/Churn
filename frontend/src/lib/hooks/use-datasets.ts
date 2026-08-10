@@ -23,10 +23,13 @@ export function useDatasetsQuery(limit = 50, offset = 0) {
   });
 }
 
-export function useDatasetQuery(id: string) {
+export function useDatasetQuery(id: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.dataset(id),
     queryFn: ({ signal }) => fetchDataset(id, signal),
+    // Callers that resolve the id from another query (a run's dataset_id) pass `enabled` so no
+    // request is made against an empty id while that query is still in flight.
+    enabled: enabled && id !== "",
   });
 }
 

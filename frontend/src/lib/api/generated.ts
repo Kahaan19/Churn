@@ -177,6 +177,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/runs/{run_id}/importance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Importance */
+        get: operations["get_importance_api_v1_runs__run_id__importance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{run_id}/explain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Explain Customer */
+        post: operations["explain_customer_api_v1_runs__run_id__explain_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -298,6 +332,65 @@ export interface components {
             /** Missing Matrix */
             missing_matrix: components["schemas"]["MissingColumn"][];
         };
+        /** ExplainRequest */
+        ExplainRequest: {
+            /** Features */
+            features: {
+                [key: string]: unknown;
+            };
+        };
+        /** Explanation */
+        Explanation: {
+            /** Run Id */
+            run_id: string;
+            /** Algorithm */
+            algorithm: string;
+            /** Churn Probability */
+            churn_probability: number;
+            /** Base Value */
+            base_value: number;
+            /**
+             * Output Space
+             * @enum {string}
+             */
+            output_space: "logit" | "probability";
+            /** Shap Values */
+            shap_values: components["schemas"]["FeatureContribution"][];
+        };
+        /**
+         * FeatureContribution
+         * @description One source column's push on a single customer's score, per DATA_CONTRACT.md.
+         */
+        FeatureContribution: {
+            /** Feature */
+            feature: string;
+            /** Display Name */
+            display_name: string;
+            /** Value */
+            value: number | string | null;
+            /** Contribution */
+            contribution: number;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "increases_risk" | "decreases_risk";
+        };
+        /**
+         * GlobalImportance
+         * @description Mean |SHAP| per source column over a validation sample, computed once at training time.
+         */
+        GlobalImportance: {
+            /** Features */
+            features: components["schemas"]["ImportanceFeature"][];
+            /** Sample Size */
+            sample_size: number;
+            /**
+             * Output Space
+             * @enum {string}
+             */
+            output_space: "logit" | "probability";
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -326,6 +419,15 @@ export interface components {
             bins: number[];
             /** Counts */
             counts: number[];
+        };
+        /** ImportanceFeature */
+        ImportanceFeature: {
+            /** Feature */
+            feature: string;
+            /** Display Name */
+            display_name: string;
+            /** Importance */
+            importance: number;
         };
         /** LeakageWarning */
         LeakageWarning: {
@@ -466,10 +568,7 @@ export interface components {
             risk_tier_bounds: {
                 [key: string]: number[];
             } | null;
-            /** Global Importance */
-            global_importance: {
-                [key: string]: number;
-            } | null;
+            global_importance: components["schemas"]["GlobalImportance"] | null;
             /** Error Message */
             error_message: string | null;
             /** Started At */
@@ -927,6 +1026,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CalibrationCurve"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_importance_api_v1_runs__run_id__importance_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalImportance"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    explain_customer_api_v1_runs__run_id__explain_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExplainRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Explanation"];
                 };
             };
             /** @description Validation Error */
