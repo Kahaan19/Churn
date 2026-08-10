@@ -112,6 +112,7 @@ POST   /runs                         {dataset_id, algorithms[], tune: bool} → 
 GET    /runs                         → paginated
 GET    /runs/{id}                    → Run + models[] with metrics    (poll this for progress)
 GET    /runs/{id}/importance         → global aggregated SHAP importance
+POST   /runs/{id}/explain            {features{}} → Explanation (proba + shap, no financials)
 GET    /runs/{id}/calibration        → reliability curve points
 GET    /runs/{id}/segments           → clusters{label, size, centroid, churn_rate} + 2D PCA points
 DELETE /runs/{id}                    204 (removes artifacts from disk too)

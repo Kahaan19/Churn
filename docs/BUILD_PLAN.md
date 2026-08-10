@@ -78,7 +78,7 @@ real stored metrics.
 
 ---
 
-## `[ ]` Phase 3 — Explainability
+## `[x]` Phase 3 — Explainability
 
 **Reads:** `ARCHITECTURE.md` (explainability)
 **Goal:** every prediction can answer "why", in business language.

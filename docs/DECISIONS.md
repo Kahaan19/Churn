@@ -99,3 +99,39 @@ two packages do not bundle OpenMP on macOS the way some other platforms' wheels 
 since it's a one-time host setup step, not a project config change — a fresh clone on Apple Silicon
 will need the same `brew install libomp` before `uv run pytest` (or the app) can import either
 library.
+
+**2026-08-09 (Phase 3) — SHAP explains the uncalibrated pipeline.** The winner's persisted artifact
+is `CalibratedClassifierCV(FrozenEstimator(pipeline))`, but the explainer is built from the pipeline
+that wrapper wraps. SHAP decomposes a model's raw additive output, and isotonic calibration is a
+monotone map applied afterwards — there is no additive decomposition of the calibrated probability,
+and forcing one would need `KernelExplainer`, which `ARCHITECTURE.md` rules out. Consequence:
+`Explanation.churn_probability` comes from the calibrated model (the number the business acts on)
+while `shap_values` explain the uncalibrated score behind it. Because calibration is monotone, the
+*ranking* of drivers is unaffected, which is what the waterfall communicates. `output_space` is
+returned on every response so the axis is labelled honestly.
+
+**2026-08-09 (Phase 3) — `POST /runs/{id}/explain` added ahead of the contract.**
+`DATA_CONTRACT.md` routes per-prediction SHAP through `POST /predictions/single` (Phase 4), so
+Phase 3 would have had no way to reach a waterfall and its "done when" would be untestable. The new
+endpoint takes a raw feature dict and returns probability + contributions. Phase 4's
+`/predictions/single` must delegate to `services/explain.explain_customer` and add the financial
+block, rather than growing a second explanation path.
+
+**2026-08-09 (Phase 3) — numpy pinned below 2.5.** `shap` depends on `numba`, which declares
+`numpy<2.5`; the resolver otherwise backtracks to a `llvmlite` from 2021 that cannot build on
+Python 3.12. `numpy` is therefore constrained to `>=2.4,<2.5` in `pyproject.toml`. Phase 2's
+determinism and metric tests pass unchanged on 2.4.6. Lift the pin and the numba bound together
+once numba supports 2.5.
+
+**2026-08-09 (Phase 3) — XGBoost additivity is checked at 1e-5, not 1e-6.** `BUILD_PLAN.md` asks
+that contributions plus base value reconstruct the model output within 1e-6. Logistic regression,
+random forest, and LightGBM hit that at float64 machine precision. XGBoost computes `pred_contribs`
+in float32, leaving a ~5e-6 residual on margins of magnitude ~5; calling xgboost's native contribution
+API directly reproduces the same residual, so it is that library's precision floor rather than an
+error in the aggregation. The test encodes the tolerance per algorithm with this reason attached.
+
+**2026-08-09 (Phase 3) — shap's `expected_value` must be primed before it is read.** For XGBoost,
+`TreeExplainer.expected_value` is 0 until the first `shap_values()` call lifts the bias out of the
+contributions matrix. Reading it at construction time therefore yielded a base value of 0 and broke
+additivity by exactly the bias. `build_explainer` now runs the explainer over a 100-row slice before
+capturing `base_value`.
