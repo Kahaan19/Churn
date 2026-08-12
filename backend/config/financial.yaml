@@ -1,0 +1,14 @@
+# Assumptions behind every currency figure the platform shows. Edited by an analyst, not by code.
+#
+# These are assumptions, not measurements — `save_rate` in particular. The UI is required to show
+# them next to any number derived from them (ARCHITECTURE.md, "Financial model").
+
+gross_margin: 0.65              # fraction of revenue that is profit
+discount_rate_monthly: 0.01     # for CLV present value
+expected_tenure_months: 24      # horizon for CLV if contract length unknown
+save_rate: 0.30                 # fraction of targeted at-risk customers actually retained
+retention_cost:                 # cost of intervention, by risk tier
+  low: 0
+  medium: 15
+  high: 45
+  critical: 90

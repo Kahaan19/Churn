@@ -21,6 +21,7 @@ dependencies = [
     "category-encoders>=2.6.0",
     "joblib>=1.4.0",
     "shap>=0.48",
+    "pyyaml>=6.0.3",
 ]
 
 [dependency-groups]
@@ -31,6 +32,7 @@ dev = [
     "mypy>=1.11.0",
     "pandas-stubs>=3.0.3.260530",
     "scipy-stubs>=1.18.0.1",
+    "types-pyyaml>=6.0.12.20260724",
 ]
 
 [tool.uv]
