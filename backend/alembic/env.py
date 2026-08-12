@@ -9,6 +9,7 @@ from app.models.base import Base
 from app.models.dataset import Dataset  # noqa: F401
 from app.models.job import Job  # noqa: F401
 from app.models.model_artifact import ModelArtifact  # noqa: F401
+from app.models.prediction import Prediction, PredictionBatch  # noqa: F401
 from app.models.run import Run  # noqa: F401
 
 config = context.config
