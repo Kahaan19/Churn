@@ -135,3 +135,38 @@ error in the aggregation. The test encodes the tolerance per algorithm with this
 contributions matrix. Reading it at construction time therefore yielded a base value of 0 and broke
 additivity by exactly the bias. `build_explainer` now runs the explainer over a 100-row slice before
 capturing `base_value`.
+
+**2026-08-12 (Phase 4) — `assumptions` carries the discount rate too.** `DATA_CONTRACT.md` shows
+the block as `{save_rate, gross_margin, horizon_months}`, but CLV is a present value and the monthly
+discount rate is one of the three inputs that produces it. Omitting it would leave the largest
+figure in the payload — lifetime value — partly unexplained, against the rule that no number is
+shown without its basis. The field is additive, so existing consumers are unaffected.
+
+**2026-08-12 (Phase 4) — a single prediction gets its own batch row.** The contract makes
+`prediction.batch_id` a required foreign key, so `POST /predictions/single` writes a
+`prediction_batch` with `source="single"`, `n_rows=1`, `status="succeeded"` before the prediction.
+The alternative, a nullable `batch_id`, would fork every read path — customer list, detail drawer,
+Phase 8 export — into "with batch" and "without batch" cases for no gain.
+
+**2026-08-12 (Phase 4) — unusable revenue values reject the file rather than scoring as zero.**
+Every currency figure descends from the revenue column, so a blank or negative value there has no
+honest interpretation: zero would understate risk and silently. `POST /predictions/batch` validates
+the column synchronously and returns a 422 naming it with spreadsheet line numbers, alongside the
+missing-column check the phase requires. `prediction_batch.storage_path` (beyond the contract's
+column list) keeps the uploaded file so a batch that fails later can be retried without re-upload.
+
+**2026-08-12 (Phase 4) — a failed scoring job no longer fails its run.** The job runner previously
+marked `run.status = "failed"` for any job carrying a `run_id`. With a second job kind that is
+correct only for training: a scoring job dying says nothing about the model that trained fine, and
+marking the run failed would retroactively invalidate a usable model and every other batch scored
+against it. Failure is now attributed per kind — train to the run, score to the batch.
+
+**2026-08-12 (Phase 4) — the segment filter ships ahead of segments.**
+`GET /predictions/batch/{id}/items` accepts `?segment=` and `prediction.segment_label` is written as
+null, per the contract. The UI filter renders only when a batch actually has segments, so Phase 6
+wires clustering into the existing column and query parameter rather than changing the API.
+
+**2026-08-12 (Phase 4) — `GET /runs/{id}/kpis` deferred to Phase 5.** It is in `DATA_CONTRACT.md`
+but not in this phase's bullet list, and its purpose — portfolio aggregates with adjustable
+`save_rate` and `gross_margin` — belongs to the dashboard consolidation phase. Batch-level
+aggregates, which Phase 4 does need, are returned on `GET /predictions/batch/{id}` instead.

@@ -98,7 +98,7 @@ the top three reasons that customer is at risk.
 
 ---
 
-## `[ ]` Phase 4 — Scoring and financial impact
+## `[x]` Phase 4 — Scoring and financial impact
 
 **Reads:** `ARCHITECTURE.md` (financial model), `DATA_CONTRACT.md` (predictions, finance tests)
 **Goal:** score customers and attach money to the risk.
