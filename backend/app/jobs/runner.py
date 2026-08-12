@@ -17,6 +17,7 @@ from app.models.model_artifact import ModelArtifact
 from app.models.run import Run
 from app.schemas.dataset import ColumnProfile
 from app.services import csv_io
+from app.services import predictions as predictions_service
 
 logger = logging.getLogger("app.jobs")
 
@@ -87,6 +88,32 @@ def _run_training_job(session: Session, job: Job) -> None:
     session.commit()
 
 
+def _run_scoring_job(session: Session, job: Job) -> None:
+    batch_id = job.payload.get("batch_id")
+    if not isinstance(batch_id, str):
+        raise ValueError(f"Job '{job.id}' has kind 'score' but no batch_id in its payload.")
+    predictions_service.run_scoring_batch(session, batch_id)
+
+
+def _record_failure(session: Session, job: Job, message: str) -> None:
+    """Attribute a failure to the thing the job was working on, not to the run it belongs to.
+
+    A scoring job failing says nothing about the run that trained the model — marking that run
+    'failed' would retroactively invalidate a model that is still perfectly usable.
+    """
+    if job.kind == "train" and job.run_id is not None:
+        run = session.get(Run, job.run_id)
+        if run is not None:
+            run.status = "failed"
+            run.error_message = message
+            session.add(run)
+            session.commit()
+    elif job.kind == "score":
+        batch_id = job.payload.get("batch_id")
+        if isinstance(batch_id, str):
+            predictions_service.mark_batch_failed(session, batch_id, message)
+
+
 def _process_next(session_factory: SessionFactory) -> bool:
     """Pop and run the oldest queued job. Returns False when the queue is empty."""
     with session_factory() as session:
@@ -104,6 +131,8 @@ def _process_next(session_factory: SessionFactory) -> bool:
         try:
             if job.kind == "train":
                 _run_training_job(session, job)
+            elif job.kind == "score":
+                _run_scoring_job(session, job)
             else:
                 raise ValueError(f"Unknown job kind '{job.kind}'.")
         except Exception as exc:
@@ -111,13 +140,8 @@ def _process_next(session_factory: SessionFactory) -> bool:
             job.status = "failed"
             job.error_message = str(exc)
             session.add(job)
-            if job.run_id is not None:
-                run = session.get(Run, job.run_id)
-                if run is not None:
-                    run.status = "failed"
-                    run.error_message = str(exc)
-                    session.add(run)
             session.commit()
+            _record_failure(session, job, str(exc))
             return True
 
         job.status = "succeeded"

@@ -42,6 +42,11 @@ class RunNotFound(CRIPError):
     code = "run_not_found"
 
 
+class PredictionNotFound(CRIPError):
+    status_code = 404
+    code = "prediction_not_found"
+
+
 class ProfileMismatch(CRIPError):
     status_code = 422
     code = "profile_mismatch"
