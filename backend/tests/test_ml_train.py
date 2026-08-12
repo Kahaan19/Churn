@@ -3,11 +3,13 @@ from pathlib import Path
 
 import pandas as pd
 
+from app.core.config import get_financial_assumptions
 from app.ml.train import train_run
 from app.schemas.run import ALGORITHMS
 from app.services.profiling import build_column_profile
 
 FIXTURES = Path(__file__).parent / "fixtures"
+ASSUMPTIONS = get_financial_assumptions()
 
 
 def _load_df() -> pd.DataFrame:
@@ -19,7 +21,9 @@ def test_train_run_completes_quickly_without_tuning(tmp_path: Path) -> None:
     profile = build_column_profile(df)
 
     start = time.monotonic()
-    result = train_run(df, profile, tune=False, artifacts_dir=tmp_path / "run-a")
+    result = train_run(
+        df, profile, tune=False, artifacts_dir=tmp_path / "run-a", assumptions=ASSUMPTIONS
+    )
     elapsed = time.monotonic() - start
 
     assert elapsed < 30
@@ -36,8 +40,12 @@ def test_train_run_is_deterministic_for_the_same_seed(tmp_path: Path) -> None:
     df = _load_df()
     profile = build_column_profile(df)
 
-    result_a = train_run(df, profile, tune=False, artifacts_dir=tmp_path / "run-a")
-    result_b = train_run(df, profile, tune=False, artifacts_dir=tmp_path / "run-b")
+    result_a = train_run(
+        df, profile, tune=False, artifacts_dir=tmp_path / "run-a", assumptions=ASSUMPTIONS
+    )
+    result_b = train_run(
+        df, profile, tune=False, artifacts_dir=tmp_path / "run-b", assumptions=ASSUMPTIONS
+    )
 
     metrics_a = {m.algorithm: m.validation_metrics for m in result_a.models}
     metrics_b = {m.algorithm: m.validation_metrics for m in result_b.models}
@@ -50,7 +58,9 @@ def test_train_run_fits_preprocessing_on_the_train_fold_only(tmp_path: Path) -> 
     df = _load_df()
     profile = build_column_profile(df)
 
-    result = train_run(df, profile, tune=False, artifacts_dir=tmp_path / "run")
+    result = train_run(
+        df, profile, tune=False, artifacts_dir=tmp_path / "run", assumptions=ASSUMPTIONS
+    )
 
     # The winner's persisted pipeline is wrapped in CalibratedClassifierCV, so inspect a
     # non-winning model's raw Pipeline to reach the fitted ColumnTransformer directly.

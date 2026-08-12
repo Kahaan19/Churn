@@ -27,24 +27,21 @@ from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 
 from app.ml.explain import GLOBAL_IMPORTANCE_SAMPLE, build_explainer, compute_global_importance
+from app.ml.finance import annuity_factor
 from app.ml.pipeline import build_feature_group_map, build_preprocessor, split_categorical_low
 from app.schemas.dataset import ColumnProfile
 from app.schemas.explain import GlobalImportance
+from app.schemas.finance import FinancialAssumptions, RiskTier
 from app.schemas.run import ALGORITHMS
 
 RANDOM_STATE = 42
 _DECISION_THRESHOLD_GRID = [round(t, 2) for t in np.arange(0.01, 1.00, 0.01)]
 
-# Provisional financial constants for EV-threshold tuning, ahead of Phase 4's
-# config/financial.yaml + ml/finance.py. Values mirror the defaults ARCHITECTURE.md already shows
-# for financial.yaml. retention_cost uses the "medium" tier as a flat stand-in — the EV(t) formula
-# in ARCHITECTURE.md is tier-agnostic (a single scalar), so tier bounds (computed after this step)
-# aren't available yet to vary it. See docs/DECISIONS.md.
-_GROSS_MARGIN = 0.65
-_DISCOUNT_RATE_MONTHLY = 0.01
-_EXPECTED_TENURE_MONTHS = 24
-_SAVE_RATE = 0.30
-_RETENTION_COST = 15.0
+# The EV(t) formula in ARCHITECTURE.md prices a false positive with a single scalar retention cost,
+# but the configured cost varies by risk tier — and tiers are quantiles of the very probability
+# distribution this threshold is being chosen over, so they don't exist yet at this point. "medium"
+# is the stand-in. See docs/DECISIONS.md.
+_THRESHOLD_TUNING_TIER: RiskTier = "medium"
 
 _PARAM_GRIDS: dict[str, dict[str, list[object]]] = {
     "logistic_regression": {"clf__C": [0.01, 0.1, 1.0, 10.0]},
@@ -242,14 +239,21 @@ def _tune_top_two(
     return tuned
 
 
-def _clv(arpu: pd.Series) -> np.ndarray:
-    months = np.arange(1, _EXPECTED_TENURE_MONTHS + 1)
-    annuity_factor = float(np.sum(1 / (1 + _DISCOUNT_RATE_MONTHLY) ** months))
-    return arpu.astype(float).to_numpy() * _GROSS_MARGIN * annuity_factor
+def _clv(arpu: pd.Series, assumptions: FinancialAssumptions) -> np.ndarray:
+    """Vectorised `ml.finance.clv` over a whole column, for threshold tuning.
+
+    The scalar function is the definition; this multiplies the same annuity factor across an array
+    rather than looping it a few thousand times per candidate threshold.
+    """
+    factor = annuity_factor(assumptions.discount_rate_monthly, assumptions.expected_tenure_months)
+    return arpu.astype(float).to_numpy() * assumptions.gross_margin * factor
 
 
-def _tune_ev_threshold(y_true: np.ndarray, proba: np.ndarray, arpu: pd.Series) -> float:
-    clv = _clv(arpu)
+def _tune_ev_threshold(
+    y_true: np.ndarray, proba: np.ndarray, arpu: pd.Series, assumptions: FinancialAssumptions
+) -> float:
+    clv = _clv(arpu, assumptions)
+    retention_cost = assumptions.retention_cost[_THRESHOLD_TUNING_TIER]
     is_positive = y_true == 1
     best_threshold, best_ev = 0.5, float("-inf")
     for threshold in _DECISION_THRESHOLD_GRID:
@@ -258,9 +262,9 @@ def _tune_ev_threshold(y_true: np.ndarray, proba: np.ndarray, arpu: pd.Series) -
         fp = predicted_positive & ~is_positive
         fn = ~predicted_positive & is_positive
         ev = (
-            float(np.sum(clv[tp])) * _SAVE_RATE
-            - int(tp.sum()) * _RETENTION_COST
-            - int(fp.sum()) * _RETENTION_COST
+            float(np.sum(clv[tp])) * assumptions.save_rate
+            - int(tp.sum()) * retention_cost
+            - int(fp.sum()) * retention_cost
             - float(np.sum(clv[fn]))
         )
         if ev > best_ev:
@@ -306,6 +310,7 @@ def train_run(
     algorithms: list[str] | None = None,
     tune: bool = False,
     artifacts_dir: Path,
+    assumptions: FinancialAssumptions,
 ) -> TrainResult:
     """Train every requested algorithm, pick the PR-AUC winner, calibrate it, and tune its
     decision threshold and risk tiers — all fitted on train/validation only (test is touched
@@ -366,7 +371,7 @@ def train_run(
         result.artifact_path = str(path)
 
     chosen_threshold = _tune_ev_threshold(
-        y_val, calibrated_val_proba, val_df[profile.revenue_column]
+        y_val, calibrated_val_proba, val_df[profile.revenue_column], assumptions
     )
     return TrainResult(
         models=results,

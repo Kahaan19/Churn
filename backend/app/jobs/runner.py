@@ -9,7 +9,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
+from app.core.config import get_financial_assumptions, get_settings
 from app.ml.train import train_run
 from app.models.dataset import Dataset
 from app.models.job import Job
@@ -51,6 +51,7 @@ def _run_training_job(session: Session, job: Job) -> None:
         algorithms=algorithms,
         tune=bool(config.get("tune", False)),
         artifacts_dir=artifacts_dir,
+        assumptions=get_financial_assumptions(),
     )
 
     winner_artifact_id: str | None = None
