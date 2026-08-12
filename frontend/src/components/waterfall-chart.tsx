@@ -1,7 +1,17 @@
 "use client";
 
 import { PlotlyChart } from "@/components/charts/plotly-chart";
-import type { Explanation } from "@/lib/api/runs";
+import type { FeatureContribution } from "@/lib/api/runs";
+
+/**
+ * Structural, not the `Explanation` response type: a stored `Prediction` carries the same three
+ * fields under a different shape, and both must reach this chart without a second copy of it.
+ */
+export interface WaterfallInput {
+  base_value: number;
+  output_space: "logit" | "probability";
+  shap_values: FeatureContribution[];
+}
 
 const RAISES_COLOR = "#ef4444";
 const LOWERS_COLOR = "#0ea5e9";
@@ -14,7 +24,7 @@ const TOP_N = 8;
  * this customer's score. Factors past the top few are collapsed into one bar so the chart stays
  * readable — their sum is still shown, so the bars still add up to the final score.
  */
-export function WaterfallChart({ explanation }: { explanation: Explanation }) {
+export function WaterfallChart({ explanation }: { explanation: WaterfallInput }) {
   const top = explanation.shap_values.slice(0, TOP_N);
   const rest = explanation.shap_values.slice(TOP_N);
   const restTotal = rest.reduce((sum, c) => sum + c.contribution, 0);

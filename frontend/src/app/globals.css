@@ -23,6 +23,14 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-risk-low: var(--risk-low);
+  --color-risk-low-foreground: var(--risk-low-foreground);
+  --color-risk-medium: var(--risk-medium);
+  --color-risk-medium-foreground: var(--risk-medium-foreground);
+  --color-risk-high: var(--risk-high);
+  --color-risk-high-foreground: var(--risk-high-foreground);
+  --color-risk-critical: var(--risk-critical);
+  --color-risk-critical-foreground: var(--risk-critical-foreground);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -73,6 +81,18 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
+
+  /* Risk tiers. The scale moves in lightness and chroma as well as hue, and every use pairs it
+     with the tier's name and a four-step rank meter, so nothing here depends on hue alone. */
+  --risk-low: oklch(0.94 0.02 220);
+  --risk-low-foreground: oklch(0.44 0.05 235);
+  --risk-medium: oklch(0.94 0.05 95);
+  --risk-medium-foreground: oklch(0.45 0.08 75);
+  --risk-high: oklch(0.93 0.08 55);
+  --risk-high-foreground: oklch(0.47 0.13 45);
+  --risk-critical: oklch(0.9 0.07 22);
+  --risk-critical-foreground: oklch(0.45 0.19 25);
+
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -107,6 +127,16 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
+
+  --risk-low: oklch(0.3 0.03 235);
+  --risk-low-foreground: oklch(0.83 0.05 220);
+  --risk-medium: oklch(0.33 0.05 80);
+  --risk-medium-foreground: oklch(0.86 0.09 92);
+  --risk-high: oklch(0.35 0.08 48);
+  --risk-high-foreground: oklch(0.83 0.12 62);
+  --risk-critical: oklch(0.35 0.11 24);
+  --risk-critical-foreground: oklch(0.84 0.11 28);
+
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);

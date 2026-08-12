@@ -211,10 +211,139 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/predictions/single": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Score Single */
+        post: operations["score_single_api_v1_predictions_single_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/predictions/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Batches */
+        get: operations["list_batches_api_v1_predictions_batch_get"];
+        put?: never;
+        /** Score Batch */
+        post: operations["score_batch_api_v1_predictions_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/predictions/batch/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Batch */
+        get: operations["get_batch_api_v1_predictions_batch__batch_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/predictions/batch/{batch_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Batch Items */
+        get: operations["list_batch_items_api_v1_predictions_batch__batch_id__items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/predictions/{prediction_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Prediction */
+        get: operations["get_prediction_api_v1_predictions__prediction_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AssumptionsBlock
+         * @description Shipped with every financial payload so no figure is ever shown without its basis.
+         */
+        AssumptionsBlock: {
+            /** Save Rate */
+            save_rate: number;
+            /** Gross Margin */
+            gross_margin: number;
+            /** Discount Rate Monthly */
+            discount_rate_monthly: number;
+            /** Horizon Months */
+            horizon_months: number;
+        };
+        /** BatchSummary */
+        BatchSummary: {
+            /** N Scored */
+            n_scored: number;
+            /** Tier Counts */
+            tier_counts: {
+                [key: string]: number;
+            };
+            /** Mean Churn Probability */
+            mean_churn_probability: number;
+            /** Total Monthly Revenue At Risk */
+            total_monthly_revenue_at_risk: number;
+            /** Total Annual Revenue At Risk */
+            total_annual_revenue_at_risk: number;
+            /** Total Expected Value At Risk */
+            total_expected_value_at_risk: number;
+            /** Total Expected Saved */
+            total_expected_saved: number;
+            /** Total Campaign Cost */
+            total_campaign_cost: number;
+            assumptions: components["schemas"]["AssumptionsBlock"];
+        };
+        /** Body_score_batch_api_v1_predictions_batch_post */
+        Body_score_batch_api_v1_predictions_batch_post: {
+            /** Run Id */
+            run_id: string;
+            /** File */
+            file: string;
+        };
         /** Body_upload_dataset_api_v1_datasets_post */
         Body_upload_dataset_api_v1_datasets_post: {
             /** File */
@@ -301,6 +430,29 @@ export interface components {
             columns: string[];
             /** Matrix */
             matrix: number[][];
+        };
+        /**
+         * CustomerFinancials
+         * @description Money attached to one customer's churn probability, per DATA_CONTRACT.md.
+         */
+        CustomerFinancials: {
+            /** Arpu */
+            arpu: number;
+            /** Clv */
+            clv: number;
+            /** Monthly Revenue At Risk */
+            monthly_revenue_at_risk: number;
+            /** Annual Revenue At Risk */
+            annual_revenue_at_risk: number;
+            /** Expected Value At Risk */
+            expected_value_at_risk: number;
+            /** Expected Saved */
+            expected_saved: number;
+            /** Campaign Cost */
+            campaign_cost: number;
+            /** Roi */
+            roi: number | null;
+            assumptions: components["schemas"]["AssumptionsBlock"];
         };
         /** Dataset */
         Dataset: {
@@ -517,6 +669,28 @@ export interface components {
             /** Offset */
             offset: number;
         };
+        /** Page[PredictionBatch] */
+        Page_PredictionBatch_: {
+            /** Items */
+            items: components["schemas"]["PredictionBatch"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
+        /** Page[PredictionListItem] */
+        Page_PredictionListItem_: {
+            /** Items */
+            items: components["schemas"]["PredictionListItem"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
         /** Page[Run] */
         Page_Run_: {
             /** Items */
@@ -527,6 +701,115 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
+        };
+        /** Prediction */
+        Prediction: {
+            /** Id */
+            id: string;
+            /** Batch Id */
+            batch_id: string;
+            /** Run Id */
+            run_id: string;
+            /** Customer Ref */
+            customer_ref: string | null;
+            /** Features */
+            features: {
+                [key: string]: unknown;
+            };
+            /** Churn Probability */
+            churn_probability: number;
+            /**
+             * Risk Tier
+             * @enum {string}
+             */
+            risk_tier: "low" | "medium" | "high" | "critical";
+            shap_values: components["schemas"]["PredictionShap"];
+            financials: components["schemas"]["CustomerFinancials"];
+            /** Segment Label */
+            segment_label: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** PredictionBatch */
+        PredictionBatch: {
+            /** Id */
+            id: string;
+            /** Run Id */
+            run_id: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "single" | "csv";
+            /** Filename */
+            filename: string | null;
+            /** N Rows */
+            n_rows: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "running" | "succeeded" | "failed";
+            /** Error Message */
+            error_message: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            summary?: components["schemas"]["BatchSummary"] | null;
+        };
+        /**
+         * PredictionListItem
+         * @description The customer list's row — everything it renders, and nothing it doesn't.
+         *
+         *     SHAP and the full feature dict are deliberately absent: a thousand-row page carrying every
+         *     customer's contributions is megabytes of payload nobody looks at until a row is opened.
+         */
+        PredictionListItem: {
+            /** Id */
+            id: string;
+            /** Customer Ref */
+            customer_ref: string | null;
+            /** Churn Probability */
+            churn_probability: number;
+            /**
+             * Risk Tier
+             * @enum {string}
+             */
+            risk_tier: "low" | "medium" | "high" | "critical";
+            /** Segment Label */
+            segment_label: string | null;
+            /** Arpu */
+            arpu: number;
+            /** Monthly Revenue At Risk */
+            monthly_revenue_at_risk: number;
+            /** Expected Value At Risk */
+            expected_value_at_risk: number;
+            /** Expected Saved */
+            expected_saved: number;
+            /** Campaign Cost */
+            campaign_cost: number;
+            /** Roi */
+            roi: number | null;
+        };
+        /**
+         * PredictionShap
+         * @description SHAP for one customer, aggregated to source columns and sorted by |contribution|.
+         */
+        PredictionShap: {
+            /** Base Value */
+            base_value: number;
+            /**
+             * Output Space
+             * @enum {string}
+             */
+            output_space: "logit" | "probability";
+            /** Values */
+            values: components["schemas"]["FeatureContribution"][];
         };
         /** QualityReport */
         QualityReport: {
@@ -609,6 +892,15 @@ export interface components {
              * @default false
              */
             tune: boolean;
+        };
+        /** SinglePredictionRequest */
+        SinglePredictionRequest: {
+            /** Run Id */
+            run_id: string;
+            /** Features */
+            features: {
+                [key: string]: unknown;
+            };
         };
         /** TargetDistribution */
         TargetDistribution: {
@@ -1092,6 +1384,203 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Explanation"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    score_single_api_v1_predictions_single_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SinglePredictionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Prediction"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_batches_api_v1_predictions_batch_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_PredictionBatch_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    score_batch_api_v1_predictions_batch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_score_batch_api_v1_predictions_batch_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredictionBatch"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_batch_api_v1_predictions_batch__batch_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredictionBatch"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_batch_items_api_v1_predictions_batch__batch_id__items_get: {
+        parameters: {
+            query?: {
+                risk_tier?: ("low" | "medium" | "high" | "critical") | null;
+                segment?: string | null;
+                sort?: "expected_value_at_risk" | "churn_probability" | "monthly_revenue_at_risk";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_PredictionListItem_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_prediction_api_v1_predictions__prediction_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prediction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Prediction"];
                 };
             };
             /** @description Validation Error */
