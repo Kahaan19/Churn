@@ -6,10 +6,12 @@ from starlette import status
 
 from app.core.db import get_session
 from app.schemas.explain import ExplainRequest, Explanation, GlobalImportance
+from app.schemas.kpi import PortfolioKpis
 from app.schemas.pagination import Page
 from app.schemas.run import CalibrationCurve, RunCreate
 from app.schemas.run import Run as RunSchema
 from app.services import explain as explain_service
+from app.services import kpis as kpis_service
 from app.services import runs as runs_service
 
 router = APIRouter(prefix="/runs", tags=["runs"])
@@ -41,6 +43,20 @@ def get_run(session: SessionDep, run_id: str) -> runs_service.RunModel:
 @router.get("/{run_id}/calibration", response_model=CalibrationCurve)
 def get_calibration(session: SessionDep, run_id: str) -> dict[str, object]:
     return runs_service.get_calibration(session, run_id)
+
+
+@router.get("/{run_id}/kpis", response_model=PortfolioKpis)
+def get_kpis(
+    session: SessionDep,
+    run_id: str,
+    # Bounds mirror `FinancialAssumptions`, so an out-of-range value is refused by FastAPI before
+    # any money is computed from it.
+    save_rate: Annotated[float | None, Query(ge=0.0, le=1.0)] = None,
+    gross_margin: Annotated[float | None, Query(gt=0.0, le=1.0)] = None,
+) -> PortfolioKpis:
+    return kpis_service.portfolio_kpis(
+        session, run_id, save_rate=save_rate, gross_margin=gross_margin
+    )
 
 
 @router.get("/{run_id}/importance", response_model=GlobalImportance)
