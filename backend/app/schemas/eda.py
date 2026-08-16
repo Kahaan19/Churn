@@ -24,6 +24,10 @@ class Correlation(BaseModel):
 class TargetDistribution(BaseModel):
     labels: list[str]
     counts: list[int]
+    # Which of `labels` means "churned". Counts arrive ordered by frequency, so without this the
+    # chart cannot know which bar to paint the churn colour. Optional so EDA payloads cached
+    # before this field existed still validate on read.
+    positive_label: str | None = None
 
 
 class EDAPayload(BaseModel):

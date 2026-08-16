@@ -71,9 +71,12 @@ def _correlation(df: pd.DataFrame, profile: ColumnProfile) -> Correlation:
 
 
 def _target_distribution(df: pd.DataFrame, profile: ColumnProfile) -> TargetDistribution:
-    counts = df[profile.target_column].value_counts(dropna=True)
+    target = df[profile.target_column]
+    counts = target.value_counts(dropna=True)
     return TargetDistribution(
-        labels=[str(v) for v in counts.index], counts=[int(c) for c in counts.tolist()]
+        labels=[str(v) for v in counts.index],
+        counts=[int(c) for c in counts.tolist()],
+        positive_label=str(positive_class_value(target)) if len(counts) else None,
     )
 
 

@@ -49,6 +49,15 @@ def test_target_distribution_sums_to_row_count() -> None:
     assert sum(payload.target_distribution.counts) == 60
 
 
+def test_target_distribution_names_the_churn_class() -> None:
+    # Counts come back frequency-ordered, so the label is the only thing that tells a chart which
+    # bar means "left". Position would flip on a dataset where churn is the majority class.
+    payload, _ = _payload("valid_sample.csv")
+
+    assert payload.target_distribution.positive_label == "Yes"
+    assert payload.target_distribution.positive_label in payload.target_distribution.labels
+
+
 def test_eda_never_exposes_raw_rows_only_aggregates() -> None:
     payload, _ = _payload("blank_numerics.csv")
 
