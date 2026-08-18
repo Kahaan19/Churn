@@ -1,4 +1,4 @@
-import { API_BASE_URL, ApiError } from "@/lib/api/client";
+import { API_BASE_URL, ApiError, parseOrThrow } from "@/lib/api/client";
 import type { paths } from "@/lib/api/generated";
 
 export type Dataset =
@@ -11,13 +11,6 @@ export type EDAPayload =
   paths["/api/v1/datasets/{dataset_id}/eda"]["get"]["responses"][200]["content"]["application/json"];
 export type ColumnProfileUpdate =
   paths["/api/v1/datasets/{dataset_id}/profile"]["patch"]["requestBody"]["content"]["application/json"];
-
-async function parseOrThrow<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    throw new ApiError(`Request failed (${response.status})`, response.status);
-  }
-  return (await response.json()) as T;
-}
 
 export async function fetchDatasets(
   { limit = 50, offset = 0 }: { limit?: number; offset?: number } = {},
@@ -65,6 +58,20 @@ export async function deleteDataset(id: string): Promise<void> {
 }
 
 /**
+ * The envelope names the offending column or the size limit; XHR gives us the body as text, so it
+ * is parsed rather than thrown away in favour of a bare status code.
+ */
+function uploadErrorMessage(xhr: XMLHttpRequest): string {
+  try {
+    const body = JSON.parse(xhr.responseText) as { error?: { message?: string } };
+    if (body.error?.message) return body.error.message;
+  } catch {
+    // Not JSON — fall through to the status-code message.
+  }
+  return `Upload failed (${xhr.status})`;
+}
+
+/**
  * XHR rather than fetch: fetch has no upload-progress event, and a large CSV upload
  * without visible progress reads as a hang.
  */
@@ -83,7 +90,7 @@ export function uploadDataset(file: File, onProgress?: (pct: number) => void): P
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(JSON.parse(xhr.responseText) as Dataset);
       } else {
-        reject(new ApiError(`Upload failed (${xhr.status})`, xhr.status));
+        reject(new ApiError(uploadErrorMessage(xhr), xhr.status));
       }
     };
     xhr.onerror = () => reject(new ApiError("Upload failed (network error)", 0));

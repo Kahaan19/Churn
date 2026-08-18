@@ -1,4 +1,4 @@
-import { API_BASE_URL, ApiError } from "@/lib/api/client";
+import { API_BASE_URL, parseOrThrow } from "@/lib/api/client";
 import type { paths } from "@/lib/api/generated";
 
 export type Prediction =
@@ -17,24 +17,6 @@ export type RiskTier = Prediction["risk_tier"];
 export type SortKey = NonNullable<
   paths["/api/v1/predictions/batch/{batch_id}/items"]["get"]["parameters"]["query"]
 >["sort"];
-
-/**
- * Error envelopes carry a human-readable message naming the offending column or row — surfacing
- * that verbatim is the difference between "upload failed" and "you're missing Contract".
- */
-async function parseOrThrow<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    let message = `Request failed (${response.status})`;
-    try {
-      const body = (await response.json()) as { error?: { message?: string } };
-      if (body.error?.message) message = body.error.message;
-    } catch {
-      // Non-JSON error body (a proxy timeout, say) — the status-code message stands.
-    }
-    throw new ApiError(message, response.status);
-  }
-  return (await response.json()) as T;
-}
 
 export async function scoreSingle(
   runId: string,

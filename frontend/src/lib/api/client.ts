@@ -16,6 +16,25 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Error envelopes carry a human-readable message naming the offending column, row, or field.
+ * Surfacing that verbatim is the difference between "upload failed" and "you're missing Contract",
+ * so every fetcher in `lib/api` goes through here rather than inventing its own message.
+ */
+export async function parseOrThrow<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    let message = `Request failed (${response.status})`;
+    try {
+      const body = (await response.json()) as { error?: { message?: string } };
+      if (body.error?.message) message = body.error.message;
+    } catch {
+      // Non-JSON error body (a proxy timeout, say) — the status-code message stands.
+    }
+    throw new ApiError(message, response.status);
+  }
+  return (await response.json()) as T;
+}
+
 export async function fetchHealth(signal?: AbortSignal): Promise<HealthResponse> {
   const response = await fetch(`${API_BASE_URL}/health`, { signal });
   if (!response.ok) {

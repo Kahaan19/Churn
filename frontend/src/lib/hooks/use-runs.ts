@@ -7,8 +7,10 @@ import {
   explainCustomer,
   fetchCalibration,
   fetchImportance,
+  fetchKpis,
   fetchRun,
   fetchRuns,
+  type KpiQuery,
   type RunCreate,
 } from "@/lib/api/runs";
 import { queryKeys } from "@/lib/query-keys";
@@ -61,5 +63,16 @@ export function useCreateRun() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["runs"] });
     },
+  });
+}
+
+export function useKpisQuery(id: string, query: KpiQuery, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.runKpis(id, query),
+    queryFn: ({ signal }) => fetchKpis(id, query, signal),
+    enabled,
+    // Dragging an assumption slider must not blank the figures it is changing — the previous
+    // answer stays on screen, marked stale, until the new one lands.
+    placeholderData: (previous) => previous,
   });
 }
