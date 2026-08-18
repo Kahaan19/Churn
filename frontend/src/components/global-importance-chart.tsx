@@ -2,12 +2,12 @@
 
 import { PlotlyChart } from "@/components/charts/plotly-chart";
 import type { GlobalImportance } from "@/lib/api/runs";
-
-const CHURN_COLOR = "#ef4444";
+import { useChartTheme } from "@/lib/chart-theme";
 
 const TOP_N = 15;
 
 export function GlobalImportanceChart({ importance }: { importance: GlobalImportance }) {
+  const colors = useChartTheme();
   // Plotly stacks horizontal bars bottom-up, so the ranking is reversed to put the strongest
   // driver at the top where it reads first.
   const shown = importance.features.slice(0, TOP_N).reverse();
@@ -20,7 +20,7 @@ export function GlobalImportanceChart({ importance }: { importance: GlobalImport
           orientation: "h",
           x: shown.map((f) => f.importance),
           y: shown.map((f) => f.display_name),
-          marker: { color: CHURN_COLOR },
+          marker: { color: colors.churn },
           hovertemplate: "%{y}: %{x:.3f}<extra></extra>",
         },
       ]}

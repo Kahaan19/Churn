@@ -2,12 +2,11 @@
 
 import { PlotlyChart } from "@/components/charts/plotly-chart";
 import type { CalibrationCurve } from "@/lib/api/runs";
-
-// Matches the churn/base colour semantics used across EdaView, per CONVENTIONS.md.
-const CHURN_COLOR = "#ef4444";
-const BASE_COLOR = "#94a3b8";
+import { useChartTheme } from "@/lib/chart-theme";
 
 export function CalibrationChart({ curve }: { curve: CalibrationCurve }) {
+  const colors = useChartTheme();
+
   return (
     <PlotlyChart
       data={[
@@ -17,7 +16,7 @@ export function CalibrationChart({ curve }: { curve: CalibrationCurve }) {
           x: [0, 1],
           y: [0, 1],
           name: "Perfectly calibrated",
-          line: { dash: "dot", color: BASE_COLOR },
+          line: { dash: "dot", color: colors.base },
           hoverinfo: "skip",
         },
         {
@@ -26,7 +25,8 @@ export function CalibrationChart({ curve }: { curve: CalibrationCurve }) {
           x: curve.points.map((p) => p.predicted),
           y: curve.points.map((p) => p.observed),
           name: "Observed",
-          marker: { color: CHURN_COLOR },
+          marker: { color: colors.churn },
+          line: { color: colors.churn },
           text: curve.points.map((p) => `${p.count} customers`),
         },
       ]}

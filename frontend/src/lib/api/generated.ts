@@ -177,6 +177,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/runs/{run_id}/kpis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Kpis */
+        get: operations["get_kpis_api_v1_runs__run_id__kpis_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/runs/{run_id}/importance": {
         parameters: {
             query?: never;
@@ -289,6 +306,23 @@ export interface paths {
         };
         /** Get Prediction */
         get: operations["get_prediction_api_v1_predictions__prediction_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Settings */
+        get: operations["get_settings_api_v1_settings_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -702,6 +736,79 @@ export interface components {
             /** Offset */
             offset: number;
         };
+        /**
+         * PlatformSettings
+         * @description What the platform is currently configured to assume, read-only.
+         *
+         *     Exists so the settings page can show the basis of every currency figure without a run or a
+         *     scored batch to hang it off. Editing is deliberately not offered: `config/financial.yaml` is
+         *     the single source of these values, and a second, racier way to set them would mean two
+         *     customers scored minutes apart could rest on different assumptions with no record of it.
+         */
+        PlatformSettings: {
+            /** Gross Margin */
+            gross_margin: number;
+            /** Discount Rate Monthly */
+            discount_rate_monthly: number;
+            /** Expected Tenure Months */
+            expected_tenure_months: number;
+            /** Save Rate */
+            save_rate: number;
+            /** Retention Cost */
+            retention_cost: {
+                [key: string]: number;
+            };
+            /** Config Path */
+            config_path: string;
+            /** Max Upload Mb */
+            max_upload_mb: number;
+            /** Version */
+            version: string;
+        };
+        /**
+         * PortfolioKpis
+         * @description Everything scored against one run, aggregated.
+         *
+         *     Recomputed from each customer's stored probability and revenue rather than summed from their
+         *     stored financials, because `save_rate` and `gross_margin` are answerable questions ("what if we
+         *     only save one in ten?") and both change the arithmetic. The `assumptions` block therefore
+         *     always describes the numbers in *this* response, not the ones on disk.
+         */
+        PortfolioKpis: {
+            /** Run Id */
+            run_id: string;
+            /** N Customers */
+            n_customers: number;
+            /** N Batches */
+            n_batches: number;
+            /** Mean Churn Probability */
+            mean_churn_probability: number;
+            /** Tier Counts */
+            tier_counts: {
+                [key: string]: number;
+            };
+            /** Tiers */
+            tiers: components["schemas"]["TierKpi"][];
+            /** Total Monthly Revenue At Risk */
+            total_monthly_revenue_at_risk: number;
+            /** Total Annual Revenue At Risk */
+            total_annual_revenue_at_risk: number;
+            /** Total Expected Value At Risk */
+            total_expected_value_at_risk: number;
+            /** Total Expected Saved */
+            total_expected_saved: number;
+            /** Total Campaign Cost */
+            total_campaign_cost: number;
+            /** Net Benefit */
+            net_benefit: number;
+            /** Roi */
+            roi: number | null;
+            assumptions: components["schemas"]["AssumptionsBlock"];
+            /** Is Overridden */
+            is_overridden: boolean;
+            /** Last Scored At */
+            last_scored_at: string | null;
+        };
         /** Prediction */
         Prediction: {
             /** Id */
@@ -908,6 +1015,33 @@ export interface components {
             labels: string[];
             /** Counts */
             counts: number[];
+            /** Positive Label */
+            positive_label?: string | null;
+        };
+        /**
+         * TierKpi
+         * @description One risk tier's share of the portfolio — headcount and money, side by side.
+         */
+        TierKpi: {
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "low" | "medium" | "high" | "critical";
+            /** N Customers */
+            n_customers: number;
+            /** Share */
+            share: number;
+            /** Mean Churn Probability */
+            mean_churn_probability: number;
+            /** Monthly Revenue At Risk */
+            monthly_revenue_at_risk: number;
+            /** Expected Value At Risk */
+            expected_value_at_risk: number;
+            /** Expected Saved */
+            expected_saved: number;
+            /** Campaign Cost */
+            campaign_cost: number;
         };
         /** TypeIssue */
         TypeIssue: {
@@ -1331,6 +1465,40 @@ export interface operations {
             };
         };
     };
+    get_kpis_api_v1_runs__run_id__kpis_get: {
+        parameters: {
+            query?: {
+                save_rate?: number | null;
+                gross_margin?: number | null;
+            };
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioKpis"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_importance_api_v1_runs__run_id__importance_get: {
         parameters: {
             query?: never;
@@ -1590,6 +1758,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformSettings"];
                 };
             };
         };

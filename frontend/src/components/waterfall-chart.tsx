@@ -2,6 +2,7 @@
 
 import { PlotlyChart } from "@/components/charts/plotly-chart";
 import type { FeatureContribution } from "@/lib/api/runs";
+import { useChartTheme } from "@/lib/chart-theme";
 
 /**
  * Structural, not the `Explanation` response type: a stored `Prediction` carries the same three
@@ -13,10 +14,6 @@ export interface WaterfallInput {
   shap_values: FeatureContribution[];
 }
 
-const RAISES_COLOR = "#ef4444";
-const LOWERS_COLOR = "#0ea5e9";
-const BASE_COLOR = "#94a3b8";
-
 const TOP_N = 8;
 
 /**
@@ -25,6 +22,7 @@ const TOP_N = 8;
  * readable — their sum is still shown, so the bars still add up to the final score.
  */
 export function WaterfallChart({ explanation }: { explanation: WaterfallInput }) {
+  const colors = useChartTheme();
   const top = explanation.shap_values.slice(0, TOP_N);
   const rest = explanation.shap_values.slice(TOP_N);
   const restTotal = rest.reduce((sum, c) => sum + c.contribution, 0);
@@ -51,10 +49,12 @@ export function WaterfallChart({ explanation }: { explanation: WaterfallInput })
           y: labels,
           x: values,
           measure: measures,
-          decreasing: { marker: { color: LOWERS_COLOR } },
-          increasing: { marker: { color: RAISES_COLOR } },
-          totals: { marker: { color: BASE_COLOR } },
-          connector: { line: { color: BASE_COLOR, width: 1 } },
+          // Pushes towards leaving are the churn colour; pushes away from it are the retained
+          // colour — the same two meanings they carry on every other chart.
+          decreasing: { marker: { color: colors.retained } },
+          increasing: { marker: { color: colors.churn } },
+          totals: { marker: { color: colors.base } },
+          connector: { line: { color: colors.base, width: 1 } },
           hovertemplate: "%{y}: %{x:+.3f}<extra></extra>",
         },
       ]}

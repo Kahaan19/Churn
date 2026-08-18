@@ -4,12 +4,35 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ------------------------------------------------------------------------------------------
+   CRIP token system (CONVENTIONS.md, "UI direction").
+
+   Six named palette values, and nothing outside this block invents a colour:
+
+     ink        near-black with a cool cast — type, and the dark theme's ground
+     paper      warm off-white — the light theme's ground, deliberately not #fff
+     accent     deep teal — the one interactive colour; primary buttons, links, focus
+     churn      warm red — *always* means "leaving", in every chart and every view
+     retained   muted teal-green — always means "staying", churn's counterpart
+     sand       warm neutral — third chart series, dividers with a bit of warmth
+
+   Risk tiers get their own scale below. It moves in lightness and chroma as well as hue and is
+   always paired with the tier's name and a four-step meter, so nothing depends on hue alone.
+
+   Charts read these same variables at runtime via `lib/chart-theme.ts` — there is one palette,
+   not a CSS one and a Plotly one.
+   ------------------------------------------------------------------------------------------ */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+
+  /* Two typefaces: Space Grotesk carries headings and headline figures, Geist does the reading
+     and the tables. Tabular numerals are mandatory wherever figures stack in a column. */
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-space-grotesk);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -18,6 +41,9 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-churn: var(--churn);
+  --color-retained: var(--retained);
+  --color-sand: var(--sand);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -47,43 +73,59 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+
+  /* Spacing: one 4px base, and the steps below are the only ones used. Gaps inside a component
+     are 2/3/4, gaps between components are 6, gaps between sections are 10. */
+  --spacing: 0.25rem;
+
+  /* Radius: 8px base. Tighter than the shadcn default on purpose — a dense table of money reads
+     as a ledger, not as a row of pill-shaped cards. */
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
+  --radius-3xl: calc(var(--radius) * 2.5);
+  --radius-4xl: calc(var(--radius) * 3);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.5rem;
 
-  /* Risk tiers. The scale moves in lightness and chroma as well as hue, and every use pairs it
-     with the tier's name and a four-step rank meter, so nothing here depends on hue alone. */
+  --paper: oklch(0.985 0.005 95);
+  --ink: oklch(0.22 0.02 250);
+  --accent-teal: oklch(0.48 0.1 205);
+  --churn: oklch(0.55 0.17 28);
+  --retained: oklch(0.6 0.085 190);
+  --sand: oklch(0.78 0.05 80);
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: oklch(1 0.002 95);
+  --card-foreground: var(--ink);
+  --popover: oklch(1 0.002 95);
+  --popover-foreground: var(--ink);
+  --primary: var(--accent-teal);
+  --primary-foreground: oklch(0.99 0.005 95);
+  --secondary: oklch(0.955 0.006 95);
+  --secondary-foreground: var(--ink);
+  --muted: oklch(0.955 0.006 95);
+  --muted-foreground: oklch(0.52 0.015 250);
+  --accent: oklch(0.94 0.012 205);
+  --accent-foreground: var(--accent-teal);
+  --destructive: var(--churn);
+  --border: oklch(0.9 0.008 95);
+  --input: oklch(0.9 0.008 95);
+  --ring: var(--accent-teal);
+
+  /* Chart series, in fixed order. 1 is always churn and 2 is always retained — a series never
+     changes colour between two views of the same fact. */
+  --chart-1: var(--churn);
+  --chart-2: var(--retained);
+  --chart-3: var(--sand);
+  --chart-4: var(--accent-teal);
+  --chart-5: oklch(0.62 0.015 250);
+
   --risk-low: oklch(0.94 0.02 220);
   --risk-low-foreground: oklch(0.44 0.05 235);
   --risk-medium: oklch(0.94 0.05 95);
@@ -93,40 +135,48 @@
   --risk-critical: oklch(0.9 0.07 22);
   --risk-critical-foreground: oklch(0.45 0.19 25);
 
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.965 0.008 95);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--accent-teal);
+  --sidebar-primary-foreground: oklch(0.99 0.005 95);
+  --sidebar-accent: oklch(0.93 0.014 205);
+  --sidebar-accent-foreground: var(--accent-teal);
+  --sidebar-border: oklch(0.9 0.008 95);
+  --sidebar-ring: var(--accent-teal);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --paper: oklch(0.96 0.004 95);
+  --ink: oklch(0.19 0.015 250);
+  --accent-teal: oklch(0.74 0.1 195);
+  --churn: oklch(0.68 0.16 30);
+  --retained: oklch(0.74 0.09 185);
+  --sand: oklch(0.75 0.05 80);
+
+  --background: var(--ink);
+  --foreground: var(--paper);
+  --card: oklch(0.235 0.015 250);
+  --card-foreground: var(--paper);
+  --popover: oklch(0.235 0.015 250);
+  --popover-foreground: var(--paper);
+  --primary: var(--accent-teal);
+  --primary-foreground: oklch(0.19 0.015 250);
+  --secondary: oklch(0.28 0.015 250);
+  --secondary-foreground: var(--paper);
+  --muted: oklch(0.28 0.015 250);
+  --muted-foreground: oklch(0.72 0.012 250);
+  --accent: oklch(0.31 0.025 200);
+  --accent-foreground: var(--accent-teal);
+  --destructive: var(--churn);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: var(--accent-teal);
+
+  --chart-1: var(--churn);
+  --chart-2: var(--retained);
+  --chart-3: var(--sand);
+  --chart-4: var(--accent-teal);
+  --chart-5: oklch(0.68 0.012 250);
 
   --risk-low: oklch(0.3 0.03 235);
   --risk-low-foreground: oklch(0.83 0.05 220);
@@ -137,24 +187,52 @@
   --risk-critical: oklch(0.35 0.11 24);
   --risk-critical-foreground: oklch(0.84 0.11 28);
 
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.225 0.015 250);
+  --sidebar-foreground: var(--paper);
+  --sidebar-primary: var(--accent-teal);
+  --sidebar-primary-foreground: oklch(0.19 0.015 250);
+  --sidebar-accent: oklch(0.3 0.025 200);
+  --sidebar-accent-foreground: var(--accent-teal);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: var(--accent-teal);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
   }
   html {
     @apply font-sans;
+  }
+
+  /* Keyboard focus is visible on everything focusable, and it is the accent colour so it reads as
+     "the app is talking to you" rather than as a browser default. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+
+  /* Figures that stack in a column must line up. Applied at the element level so no table cell
+     can forget it. */
+  th,
+  td,
+  .font-heading {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Motion is decoration here — nothing in this app communicates through movement, so honouring the
+   preference costs no information. Kept to a duration rather than `none` so state changes still
+   settle rather than teleport. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

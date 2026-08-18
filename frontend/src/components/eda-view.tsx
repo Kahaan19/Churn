@@ -1,18 +1,19 @@
+"use client";
+
 import { PlotlyChart } from "@/components/charts/plotly-chart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { EDAPayload } from "@/lib/api/datasets";
+import { useChartTheme } from "@/lib/chart-theme";
 
 export type EdaState =
   | { status: "loading" }
   | { status: "error"; onRetry: () => void }
   | { status: "success"; payload: EDAPayload };
 
-// Consistent across every chart on this page, per CONVENTIONS.md — churn is always this colour.
-const CHURN_COLOR = "#ef4444";
-const BASE_COLOR = "#94a3b8";
-
 export function EdaView({ state }: { state: EdaState }) {
+  const colors = useChartTheme();
+
   if (state.status === "loading") {
     return (
       <Card>
@@ -51,7 +52,16 @@ export function EdaView({ state }: { state: EdaState }) {
                 type: "bar",
                 x: payload.target_distribution.labels,
                 y: payload.target_distribution.counts,
-                marker: { color: [BASE_COLOR, CHURN_COLOR] },
+                // Counts arrive ordered by frequency, so the churn bar is found by label rather
+                // than by position — otherwise a dataset where churn is the majority class would
+                // paint the two bars the wrong way round.
+                marker: {
+                  color: payload.target_distribution.labels.map((label) =>
+                    label === payload.target_distribution.positive_label
+                      ? colors.churn
+                      : colors.retained,
+                  ),
+                },
                 text: payload.target_distribution.counts.map(String),
                 textposition: "outside",
               },
@@ -106,7 +116,7 @@ export function EdaView({ state }: { state: EdaState }) {
                     type: "bar",
                     x: histogram.bins.slice(0, -1).map((edge, i) => (edge + histogram.bins[i + 1]) / 2),
                     y: histogram.counts,
-                    marker: { color: BASE_COLOR },
+                    marker: { color: colors.base },
                   },
                 ]}
                 layout={{
@@ -135,7 +145,7 @@ export function EdaView({ state }: { state: EdaState }) {
                     type: "bar",
                     x: summary.levels,
                     y: summary.churn_rate,
-                    marker: { color: CHURN_COLOR },
+                    marker: { color: colors.churn },
                     text: summary.churn_rate.map((r) => `${(r * 100).toFixed(0)}%`),
                     textposition: "outside",
                   },
