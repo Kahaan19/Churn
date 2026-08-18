@@ -34,8 +34,12 @@ export default function PredictPage() {
         </p>
       </div>
 
-      {runs.isPending && (
-        <div className="h-32 w-full animate-pulse rounded-lg bg-muted" aria-busy="true" />
+      {(runs.isPending || (runs.isFetching && succeeded.length === 0)) && (
+        <div
+          className="h-32 w-full animate-pulse rounded-lg bg-muted"
+          aria-busy="true"
+          aria-label="Loading your trained models"
+        />
       )}
 
       {runs.isError && (
@@ -49,7 +53,7 @@ export default function PredictPage() {
         </Card>
       )}
 
-      {runs.data && succeeded.length === 0 && (
+      {runs.data && succeeded.length === 0 && !runs.isFetching && (
         <Card>
           <CardContent className="space-y-3 py-10 text-center">
             <p className="text-sm font-medium">No trained model yet</p>

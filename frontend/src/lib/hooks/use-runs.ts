@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import {
   createRun,
@@ -26,13 +27,26 @@ export function useRunsQuery(limit = 50, offset = 0) {
 }
 
 export function useRunQuery(id: string, enabled = true) {
-  return useQuery({
+  const queryClient = useQueryClient();
+  const query = useQuery({
     queryKey: queryKeys.run(id),
     queryFn: ({ signal }) => fetchRun(id, signal),
     enabled,
     refetchInterval: (query) =>
       query.state.data && ACTIVE_STATUSES.has(query.state.data.status) ? POLL_INTERVAL_MS : false,
   });
+
+  const status = query.data?.status;
+  useEffect(() => {
+    // The moment a watched run finishes, every list holding the old status is wrong. Without this,
+    // training a model and going straight to Predict says "No trained model yet" until the cache
+    // happens to expire.
+    if (status === "succeeded" || status === "failed") {
+      void queryClient.invalidateQueries({ queryKey: ["runs"] });
+    }
+  }, [status, queryClient]);
+
+  return query;
 }
 
 export function useCalibrationQuery(id: string, enabled: boolean) {

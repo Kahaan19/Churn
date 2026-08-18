@@ -54,10 +54,12 @@ export function PortfolioOverview() {
   const setupStep = nextSetupStep({
     hasDataset: (datasets.data?.items.length ?? 0) > 0,
     hasRun: succeeded.length > 0,
-    hasScoring: (kpis.data?.n_customers ?? 0) > 0,
+    // Unknown until the KPIs actually arrive. `kpis.isPending` cannot answer this: a query that is
+    // disabled — which it is until there is a run to ask about — stays pending forever.
+    scoring: kpis.data === undefined ? "unknown" : kpis.data.n_customers > 0,
   });
 
-  if (setupStep !== null && !kpis.isPending) {
+  if (setupStep !== null) {
     return (
       <div className="space-y-6">
         <PageHeading />
@@ -142,14 +144,15 @@ function PageHeading() {
 }
 
 /** The first step the user has not completed, or null once there is something to show. */
-function nextSetupStep(state: {
+export function nextSetupStep(state: {
   hasDataset: boolean;
   hasRun: boolean;
-  hasScoring: boolean;
+  /** "unknown" while the answer is still in flight — which is not the same as "none". */
+  scoring: boolean | "unknown";
 }): SetupStep | null {
   if (!state.hasDataset) return "dataset";
   if (!state.hasRun) return "run";
-  if (!state.hasScoring) return "scoring";
+  if (state.scoring === false) return "scoring";
   return null;
 }
 

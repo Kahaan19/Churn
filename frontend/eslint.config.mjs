@@ -11,7 +11,17 @@ const compat = new FlatCompat({ baseDirectory: __dirname });
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
-    ignores: [".next/**", "out/**", "build/**", "next-env.d.ts", "src/lib/api/generated.ts"],
+    ignores: [
+      ".next/**",
+      // The e2e run builds into its own directory so it can be compiled against a different API.
+      ".next-e2e/**",
+      "playwright-report/**",
+      "test-results/**",
+      "out/**",
+      "build/**",
+      "next-env.d.ts",
+      "src/lib/api/generated.ts",
+    ],
   },
 ];
 
