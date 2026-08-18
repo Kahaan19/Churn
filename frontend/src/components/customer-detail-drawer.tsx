@@ -1,12 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 
-import { FinancialsPanel } from "@/components/financials-panel";
+import { CustomerDetail } from "@/components/customer-detail";
 import { RiskTierBadge } from "@/components/risk-tier-badge";
 import { Button } from "@/components/ui/button";
-import { WaterfallChart } from "@/components/waterfall-chart";
-import { topCaptions } from "@/lib/explanation";
 import { formatPercent } from "@/lib/format";
 import { usePredictionQuery } from "@/lib/hooks/use-predictions";
 
@@ -90,28 +89,13 @@ export function CustomerDetailDrawer({ predictionId, onClose }: CustomerDetailDr
 
           {query.data && (
             <>
-              <section className="space-y-2">
-                <h3 className="font-heading text-sm font-medium">Why they&apos;re at risk</h3>
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  {topCaptions(query.data.shap_values.values).map((caption) => (
-                    <li key={caption}>{caption}</li>
-                  ))}
-                </ul>
-                <div className="h-80">
-                  <WaterfallChart
-                    explanation={{
-                      base_value: query.data.shap_values.base_value,
-                      output_space: query.data.shap_values.output_space,
-                      shap_values: query.data.shap_values.values,
-                    }}
-                  />
-                </div>
-              </section>
-
-              <section className="space-y-3">
-                <h3 className="font-heading text-sm font-medium">What they&apos;re worth</h3>
-                <FinancialsPanel financials={query.data.financials} />
-              </section>
+              <CustomerDetail prediction={query.data} />
+              <Link
+                href={`/customers/${query.data.id}`}
+                className="inline-block text-sm font-medium text-primary hover:underline"
+              >
+                Open as a page you can share →
+              </Link>
             </>
           )}
         </div>

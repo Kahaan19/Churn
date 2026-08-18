@@ -25,10 +25,11 @@ export function useRunsQuery(limit = 50, offset = 0) {
   });
 }
 
-export function useRunQuery(id: string) {
+export function useRunQuery(id: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.run(id),
     queryFn: ({ signal }) => fetchRun(id, signal),
+    enabled,
     refetchInterval: (query) =>
       query.state.data && ACTIVE_STATUSES.has(query.state.data.status) ? POLL_INTERVAL_MS : false,
   });
