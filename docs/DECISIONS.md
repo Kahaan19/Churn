@@ -170,3 +170,49 @@ wires clustering into the existing column and query parameter rather than changi
 but not in this phase's bullet list, and its purpose — portfolio aggregates with adjustable
 `save_rate` and `gross_margin` — belongs to the dashboard consolidation phase. Batch-level
 aggregates, which Phase 4 does need, are returned on `GET /predictions/batch/{id}` instead.
+
+**2026-08-18 (Phase 5) — the route list is reconciled with what Phase 4 shipped, three ways.**
+`BUILD_PLAN.md` names `/predictions/[batchId]`, `/customers/[id]`, and `/settings`; Phase 4 built
+the batch view at `/predict/batches/[id]` and the customer view as a drawer, and `/settings` never
+existed despite being in the sidebar. (a) The batch route **keeps Phase 4's path** — it has a real
+parent page listing scored files, where `/predictions/*` would be an orphan with no index — and the
+spec'd URL is a permanent redirect to it, so nobody following the plan hits a 404. (b) The drawer
+**stays** as the working view, because a retention team goes down the ranked list and losing their
+place on every click is what makes these tools go unused; `/customers/[id]` is added alongside it as
+a permalink, and both render the same `CustomerDetail` so one customer cannot be told two stories.
+The id is the prediction, not the customer, so a shared link shows the figures that were actually
+scored rather than a fresh guess from a since-retrained model. (c) `/settings` is built.
+
+**2026-08-18 (Phase 5) — `GET /runs/{id}/kpis` recomputes rather than sums.** The phase requires
+`save_rate` and `gross_margin` to be live inputs, and both change the arithmetic: expected saved is
+linear in the save rate, and CLV — hence every lifetime figure — is linear in margin. Summing the
+`financials` stored at scoring time could therefore only ever answer the configured question. The
+endpoint instead re-runs each customer's stored probability and ARPU through
+`ml.finance.customer_financials` with the overridden assumptions. ARPU is read from the stored
+financials rather than re-derived from `features`, so it is the revenue figure that was actually
+used at scoring time. The returned `assumptions` block always describes the figures in that
+response, and `is_overridden` marks a what-if as a what-if.
+
+**2026-08-18 (Phase 5) — `GET /api/v1/settings` added, read-only.** Not in `DATA_CONTRACT.md`, but
+a settings page with no data behind it is a stub, and the assumptions are global config rather than
+run-scoped, so there was nothing to hang them off before a run exists. It also exposes the per-tier
+`retention_cost`, which nothing else did — the UI showed a campaign cost per customer without being
+able to say where it came from. Deliberately read-only: `config/financial.yaml` stays the single
+source, and a second, racier way to set these would let two customers scored minutes apart rest on
+different assumptions with no record of it. To try other values, the overview page's sliders do it
+without changing anything.
+
+**2026-08-18 (Phase 5) — `EDAPayload.target_distribution.positive_label`.** Counts arrive ordered by
+frequency, so the target chart was colouring by position and would have painted the bars the wrong
+way round on any dataset where churn is the majority class. The new field reuses the same
+`positive_class_value` heuristic the quality report already applies. Optional, so payloads cached on
+a dataset row before it existed still validate on read.
+
+**2026-08-18 (Phase 5) — Playwright added; the e2e run is fully isolated.** `@playwright/test` is
+new (the stack in `CLAUDE.md` already named playwright as the e2e tool). The run starts both servers
+itself, with the API on a scratch SQLite database and scratch upload/artifact directories under
+`backend/.e2e/`, and the frontend building into `.next-e2e/`. The separate build directory is not
+tidiness: `NEXT_PUBLIC_*` is inlined at compile time, so sharing `.next/` with the dev server served
+the tests a bundle compiled against the developer's own backend, which is how the first run failed.
+`pnpm test:e2e` is a separate gate from `pnpm test` — it needs a browser and a Python environment,
+and the five fast gates should stay fast.

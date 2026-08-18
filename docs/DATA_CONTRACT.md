@@ -103,7 +103,9 @@ DELETE /datasets/{id}                204
 
 `EDAPayload` returns **data, not images** — the frontend renders with Plotly.js:
 `histograms[]{column, bins[], counts[]}`, `categorical[]{column, levels[], counts[], churn_rate[]}`,
-`correlation{columns[], matrix[][]}`, `target_distribution`, `missing_matrix`.
+`correlation{columns[], matrix[][]}`, `target_distribution{labels[], counts[], positive_label}`,
+`missing_matrix`. Counts are frequency-ordered, so `positive_label` is what tells a chart which bar
+means "churned".
 Numeric columns are binned server-side to ≤50 bins. Never ship raw rows to the client.
 
 ### Runs
@@ -151,6 +153,24 @@ GET    /predictions/batch/{id}/export?format=csv|pdf  → file stream
 ```
 GET /runs/{id}/kpis?save_rate=&gross_margin=   → portfolio aggregates, params override config
 ```
+
+`PortfolioKpis` covers every customer scored against the run: `n_customers`, `n_batches`,
+`mean_churn_probability`, `tier_counts`, `tiers[]{tier, n_customers, share,
+mean_churn_probability, monthly_revenue_at_risk, expected_value_at_risk, expected_saved,
+campaign_cost}`, the matching `total_*` figures, `net_benefit`, `roi` (null, never inf),
+`assumptions`, `is_overridden`, `last_scored_at`. The two query parameters are re-run through
+`ml/finance.py` rather than applied to stored totals — both change the arithmetic — so the returned
+`assumptions` always describe *that* response.
+
+### Settings
+```
+GET /settings                        → PlatformSettings (read-only)
+```
+
+`PlatformSettings`: the contents of `config/financial.yaml` (`gross_margin`,
+`discount_rate_monthly`, `expected_tenure_months`, `save_rate`, `retention_cost` per tier) plus
+`config_path`, `max_upload_mb`, `version`. No write endpoint: the YAML is the single source, and a
+second way to set these would let two customers scored minutes apart rest on different assumptions.
 
 ## Finance unit tests (write these first)
 

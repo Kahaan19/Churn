@@ -119,7 +119,7 @@ tested pure function, and the assumptions behind them are on screen.
 
 ---
 
-## `[ ]` Phase 5 — Dashboard consolidation
+## `[x]` Phase 5 — Dashboard consolidation
 
 **Reads:** `CONVENTIONS.md` (UI direction)
 **Goal:** the pieces become a product.

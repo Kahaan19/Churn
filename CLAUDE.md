@@ -68,6 +68,7 @@ uv run alembic revision --autogenerate -m "msg" && uv run alembic upgrade head
 pnpm install
 pnpm dev                                  # serve :3000
 pnpm test && pnpm typecheck && pnpm lint
+pnpm test:e2e                             # playwright happy path (starts both servers itself)
 pnpm gen:api                              # regenerate client from OpenAPI
 ```
 
