@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 
+import { DatasetUpload } from "@/components/dataset-upload";
+import { EmptyState, ErrorState, LoadingRows } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { DatasetUpload } from "@/components/dataset-upload";
 import { useDatasetsQuery } from "@/lib/hooks/use-datasets";
 
 export default function DatasetsPage() {
-  const { data, isPending, isError, refetch } = useDatasetsQuery();
+  const { data, isPending, isError, error, refetch } = useDatasetsQuery();
 
   return (
     <div className="space-y-6">
@@ -24,35 +25,21 @@ export default function DatasetsPage() {
       <div className="space-y-3">
         <h2 className="font-heading text-lg font-medium">Uploaded datasets</h2>
 
-        {isPending && (
-          <div className="space-y-2" aria-busy="true" aria-label="Loading datasets">
-            <div className="h-16 w-full animate-pulse rounded-lg bg-muted" />
-            <div className="h-16 w-full animate-pulse rounded-lg bg-muted" />
-          </div>
-        )}
+        {isPending && <LoadingRows rows={2} label="Loading datasets" />}
 
         {isError && (
-          <Card>
-            <CardContent className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">Couldn&apos;t load datasets.</p>
-              <button
-                onClick={() => void refetch()}
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                Retry
-              </button>
-            </CardContent>
-          </Card>
+          <ErrorState
+            error={error}
+            fallback="Couldn't load your datasets. Check that the API is running."
+            onRetry={() => void refetch()}
+          />
         )}
 
         {data && data.items.length === 0 && (
-          <Card>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                No datasets yet — upload a CSV or load the sample dataset above to get started.
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            title="No datasets yet"
+            body="Upload a CSV of customers, or load the sample dataset above, and it will be profiled and quality-checked ready for training."
+          />
         )}
 
         {data && data.items.length > 0 && (

@@ -1,22 +1,10 @@
 "use client";
 
-import { Database, FlaskConical, LayoutDashboard, Settings, Target } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { NAV_ITEMS, isActiveNav } from "@/lib/nav";
 import { cn } from "@/lib/utils";
-
-const NAV_ITEMS = [
-  { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/datasets", label: "Datasets", icon: Database },
-  { href: "/runs", label: "Model runs", icon: FlaskConical },
-  { href: "/predict", label: "Predict", icon: Target },
-  { href: "/settings", label: "Settings", icon: Settings },
-] as const;
-
-function isActive(pathname: string, href: string): boolean {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
-}
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -26,9 +14,9 @@ export function Sidebar() {
       <div className="flex h-14 items-center px-6 font-heading text-lg font-semibold tracking-tight">
         CRIP
       </div>
-      <nav className="flex flex-col gap-1 px-3 py-2">
+      <nav aria-label="Main" className="flex flex-col gap-1 px-3 py-2">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const active = isActive(pathname, href);
+          const active = isActiveNav(pathname, href);
           return (
             <Link
               key={href}
@@ -48,5 +36,45 @@ export function Sidebar() {
         })}
       </nav>
     </aside>
+  );
+}
+
+/**
+ * Below 768px the sidebar is gone, and without this there is no navigation at all.
+ *
+ * A scrolling row of the same five destinations rather than a hamburger: five items fit, and a
+ * menu that has to be opened to find out what is in it costs a tap for nothing.
+ */
+export function MobileNav() {
+  const pathname = usePathname();
+
+  return (
+    <nav
+      aria-label="Main"
+      className="overflow-x-auto border-b border-border bg-sidebar md:hidden"
+    >
+      <ul className="flex w-max gap-1 px-3 py-2">
+        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          const active = isActiveNav(pathname, href);
+          return (
+            <li key={href}>
+              <Link
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/70",
+                )}
+              >
+                <Icon className="size-4" />
+                {label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }

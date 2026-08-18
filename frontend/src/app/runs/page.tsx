@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 
+import { RunLaunchForm } from "@/components/run-launch-form";
+import { EmptyState, ErrorState, LoadingRows } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { RunLaunchForm } from "@/components/run-launch-form";
 import { useRunsQuery } from "@/lib/hooks/use-runs";
 
 const STATUS_VARIANT = {
@@ -15,7 +16,7 @@ const STATUS_VARIANT = {
 } as const;
 
 export default function RunsPage() {
-  const { data, isPending, isError, refetch } = useRunsQuery();
+  const { data, isPending, isError, error, refetch } = useRunsQuery();
 
   return (
     <div className="space-y-6">
@@ -31,35 +32,21 @@ export default function RunsPage() {
       <div className="space-y-3">
         <h2 className="font-heading text-lg font-medium">Runs</h2>
 
-        {isPending && (
-          <div className="space-y-2" aria-busy="true" aria-label="Loading runs">
-            <div className="h-16 w-full animate-pulse rounded-lg bg-muted" />
-            <div className="h-16 w-full animate-pulse rounded-lg bg-muted" />
-          </div>
-        )}
+        {isPending && <LoadingRows rows={2} label="Loading runs" />}
 
         {isError && (
-          <Card>
-            <CardContent className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">Couldn&apos;t load runs.</p>
-              <button
-                onClick={() => void refetch()}
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                Retry
-              </button>
-            </CardContent>
-          </Card>
+          <ErrorState
+            error={error}
+            fallback="Couldn't load your training runs. Check that the API is running."
+            onRetry={() => void refetch()}
+          />
         )}
 
         {data && data.items.length === 0 && (
-          <Card>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                No runs yet — train one above to see model performance.
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            title="No runs yet"
+            body="Train one above to see how well a model can pick out the customers about to leave."
+          />
         )}
 
         {data && data.items.length > 0 && (

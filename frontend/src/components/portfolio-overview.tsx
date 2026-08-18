@@ -5,8 +5,7 @@ import { useState } from "react";
 import { AssumptionControls, type AssumptionOverrides } from "@/components/assumption-controls";
 import { GettingStarted, type SetupStep } from "@/components/getting-started";
 import { PortfolioKpis } from "@/components/portfolio-kpis";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { ErrorState } from "@/components/states";
 import { formatCount } from "@/lib/format";
 import { useDatasetsQuery } from "@/lib/hooks/use-datasets";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
@@ -41,12 +40,9 @@ export function PortfolioOverview() {
 
   if (runs.isError || datasets.isError) {
     return (
-      <RetryCard
-        message={
-          runs.error instanceof Error
-            ? runs.error.message
-            : "Couldn't reach the API to load your models."
-        }
+      <ErrorState
+        error={runs.error ?? datasets.error}
+        fallback="Couldn't reach the API to load your models. Check that the backend is running."
         onRetry={() => {
           void runs.refetch();
           void datasets.refetch();
@@ -95,12 +91,9 @@ export function PortfolioOverview() {
       </div>
 
       {kpis.isError && (
-        <RetryCard
-          message={
-            kpis.error instanceof Error
-              ? kpis.error.message
-              : "Couldn't load the portfolio figures."
-          }
+        <ErrorState
+          error={kpis.error}
+          fallback="Couldn't load the portfolio figures for this model."
           onRetry={() => void kpis.refetch()}
         />
       )}
@@ -169,16 +162,3 @@ function OverviewSkeleton() {
   );
 }
 
-function RetryCard({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <Card>
-      <CardContent className="space-y-3">
-        <p className="text-sm font-medium">That didn&apos;t load</p>
-        <p className="text-sm text-muted-foreground">{message}</p>
-        <Button variant="outline" size="sm" onClick={onRetry}>
-          Try again
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
